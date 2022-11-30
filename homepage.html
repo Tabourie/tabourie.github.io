@@ -1,0 +1,161 @@
+<html>
+
+<head>
+   <title>HTML ROCKS</title>
+   <link href="https://fonts.googleapis.com/css2?family=Lobster&family=Monoton&family=Roboto:wght@300&family=Staatliches&family=Baloo+2:wght@500&display=swap" rel="stylesheet">
+   
+   <link href="main.css" rel="stylesheet">
+   
+   <link href="carousel.css" rel="stylesheet">
+</head>
+
+<body>
+
+   <div class="wrapper">
+
+      <div class="navigation">
+         
+         <a class="hamburger" href="#" onclick="dropdown()"  >&equiv;</a>
+        
+         <a href="index.html">Home</a>
+         <a href="artists.html">Lineup</a>
+         <a href="#">Tickets</a>
+         <a href="#">Locations</a>
+         <a href="#">FAQ</a>
+      </div>
+
+      <div class="hero">
+         <h1>Electric Eel</h1>
+         <img src="images/logo.png">
+         <h2>Bondi Beach</h2>
+         <h2 id="countdown">Countdown To Awesomeness!!</h2>
+         <p>New Years Eve 2022</p>
+      <a href="#">Get Tickets!</a>
+      </div>
+
+
+      <iframe src="https://www.youtube.com/embed/DB7S41oDnZo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+
+
+      <div class="lineup">
+         <a href="#">Jock Boyd </a>
+         <a href="#">Peter McKinnon </a>
+         <a href="#">Boris Brejcha </a>
+         <a href="#">DJ Muller </a>
+         <a href="#">DJ Rekab </a>
+         <a href="#">Emperors </a>
+         <a href="#">The Chevelles </a>
+         <a href="#">Coerce </a>
+         <a href="#">Femme Fatales </a>
+         <a href="#">Hawks of Alba </a>
+         <a href="#">The Thieves </a>
+         <a href="#">Aforemention</a>
+      </div>
+
+
+      <div id="carousel">
+
+         <div style="background-image:url(images/carousel_1.jpg)">
+            <h2> News </h2>
+            <p> Check out the latest</p>
+         </div>
+
+         <div style="background-image:url(images/carousel_2.jpg)">
+            <h2> Locations </h2>
+            <p> Event maps and directions</p>
+         </div>
+
+         <div style="background-image:url(images/carousel_3.jpg)">
+            <h2> Schedule </h2>
+            <p> What's on when and where </p>
+         </div>
+
+      </div>
+
+      <div class="content">
+         <h1>Elektrik Eel Festival runs over 3 days with over 120 artists playing across 12 stages at the Royal Park in Melbourne, Australia</h1>
+         <h2>With cutting-edge live shows and both international superstars of tomorrow,<br> Elektrik Eel showcases the brightest acts from the world.</h2>
+      </div>
+
+      <div class="info">
+
+         <div class="infobox">
+            <img src="images/tickets.jpg">
+         </div>
+
+         <div class="infobox tickets">
+            <h2>TICKETS</h2>
+            <h3>Early bird tickets are on sale now for a limited time only</h3>
+            <p>Early bird* price: $205 (3 days) - <a href="#">Book Now</a> </p>
+            <p>Full price: $340 (3 days) - <a href="#">Book Now</a> </p>
+            <p>Single day: $110 - <a href="#">Book Now</a> </p>
+            <h6>*Early bird price ends in August, <br> when ticket costs for 3 days will change to full price.</h6>
+         </div>
+
+         <div class="infobox">
+            <h2>LOCATIONS</h2>
+            <h3>BONDI SOUND STAGE</h3>
+            <p>Main Event and Headliner</p>
+            <h3>BRONTE PARKLAND</h3>
+            <p>Dub Tent and DJ Stage</p>
+         </div>
+
+         <div class="infobox">
+            <img src="images/locations.jpg">
+         </div>
+
+      </div>
+
+      <div class="content">
+         <p>Engage your senses and become immersed in an electrifying aural universe.</p>
+      </div>
+
+      <div class="footer">
+
+         <div class="newsletter">
+            <h2>EEL NEWSLETTER</h2>
+            <p>Sign up for latest news</p>
+            <form>
+               <input class="inputemail" type="text" placeholder="enter email" >
+               <input class="sendemail" type="submit" value="Sign Up">
+            </form>
+         </div>
+
+         <div class="footerlinks">
+            <a href="#">LINEUP</a>
+            <a href="#">TICKET INFO</a>
+            <a href="#">LATEST NEWS</a>
+         </div>
+
+         <div class="footerlinks">
+            <a href="#">EXPLORE</a>
+            <a href="#">FAMILY</a>
+            <a href="#">FAQ</a>
+         </div>
+
+         <div class="social">
+            <a href="#"><img src="images/smfacebook.png"></a>
+            <a href="#"><img src="images/sminstagram.png"></a>
+            <a href="#"><img src="images/smpinterest.png"></a>
+            <a href="#"><img src="images/smtwitter.png"></a>
+         </div>
+
+      </div>
+
+   </div>
+
+   <script>
+      function dropdown() {
+         
+         document.querySelector(".navigation").classList.toggle("active");
+      
+      }
+   </script>
+   
+   <script src="jquery.js"></script>
+   <script src="skippr.js"></script>
+   <script src="main.js"></script>
+
+</body>
+
+</html>
