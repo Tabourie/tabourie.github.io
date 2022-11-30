@@ -1,0 +1,149 @@
+/* ------------------------------------------ */
+/* CAROUSEL DIMENSIONS */
+
+#carousel {
+    width: 100%;
+    height: 600px;
+}
+
+/* ------------------------------------------ */
+/* TEXT FORMAT change this to control the display of the text */
+
+.skippr>div h2 {
+    font-size: 50px;
+    color: white;
+    font-family: Helvetica;
+    background-color: black;
+}
+
+.skippr>div p {
+    font-size: 20px;
+    color: white;
+    font-family: Helvetica;
+    background-color: black;
+}
+/* ------------------------------------------ */
+/* TEXT VERTICAL ALIGNMENT 
+
+justify-content:flex-start;         align to top 
+justify-content:flex-start;         align to bottom
+
+*/
+
+.skippr>div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+/* ------------------------------------------ */
+
+.skippr {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden
+}
+.skippr>div {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: 50% 62.5%;
+}
+
+/* ------------------------------------------ */
+
+.skippr>img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    min-height: 100%
+}
+
+.skippr-nav-container {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
+    bottom: 25px;
+    overflow: auto;
+    z-index: 999
+}
+
+/* ------------------------------------------ */
+/* MENU - DOT FORMAT */
+
+.skippr-nav-element-bubble {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0 4px
+}
+
+/* ------------------------------------------ */
+/* MENU - BLOCK FORMAT */
+
+.skippr-nav-element-block {
+    width: 60px;
+    height: 10px
+}
+
+/* ------------------------------------------ */
+/* MENU colors  */
+
+.skippr-nav-element {
+    cursor: pointer;
+    float: left;
+    background-color: rgba(255, 255, 255, 0.5);
+    transition: all .25s linear;
+}
+.skippr-nav-element:hover {
+    background-color: #fff
+}
+.skippr-nav-element-active {
+    background-color: #fff
+}
+
+/* ------------------------------------------ */
+
+.skippr-arrow {
+    position: absolute;
+    z-index: 999;
+    top: 50%;
+    transform: translate(0%, -50%);
+    transform-origin: center center;
+    cursor: pointer
+}
+
+/* ------------------------------------------ */
+/* ARROW FORMAT */
+
+.skippr-previous {
+    width: 30px;
+    height: 30px;
+    left: 2.5%;
+    transform: rotate(-45deg);
+    border-top: 2px solid white;
+    border-left: 2px solid white;
+    border-radius: 2px;
+}
+.skippr-next {
+    width: 30px;
+    height: 30px;
+    right: 3.5%;
+    transform: rotate(-45deg);
+    border-bottom: 2px solid white;
+    border-right: 2px solid white;
+    border-radius: 2px;
+}
+
+/* ------------------------------------------ */
+/* MOBILE  */
+
+@media screen and (max-width: 1280px) {
+   #carousel {
+       height: 400px;
+   }
+}

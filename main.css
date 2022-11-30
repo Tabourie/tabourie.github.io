@@ -1,0 +1,567 @@
+/*----------------------------------------------*/
+/* Google Fonts */
+
+/* 
+font-family: 'Lobster', cursive;
+font-family: 'Monoton', cursive;
+font-family: 'Roboto', sans-serif;
+font-family: 'Staatliches', cursive;
+font-family: "Baloo 2", cursive;
+*/
+
+/*----------------------------------------------*/
+/* global styles */
+
+* {
+   /*    border:1px solid orange;*/
+   margin: 0px;
+   padding: 0px;
+   box-sizing: border-box;
+}
+
+body {
+   background-image: url(images/fullpagebackground.jpg);
+   background-size: cover;
+   background-position: center;
+   background-attachment: fixed;
+}
+
+.wrapper {
+   max-width: 1280px;
+   margin: auto;
+}
+
+/*----------------------------------------------*/
+/* navigation section */
+
+.navigation {
+   display: flex;
+   justify-content: center;
+   background-color: #9f0864;
+}
+
+.navigation a {
+   text-align: center;
+   display: block;
+   text-decoration: none;
+   font-family: "Baloo 2", cursive;
+   font-size: 20px;
+   padding: 15px;
+   background-color: #9f0864;
+   color: white;
+   transition: 1s;
+}
+
+.navigation a:hover {
+   background-color: #40ecff;
+   color: #ffd3d3;
+}
+
+.hamburger {
+   display: none !important;
+}
+
+/*----------------------------------------------*/
+/* hero section */
+
+.hero {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+
+   height: 700px;
+
+   background-image: url(images/hero.jpg);
+   background-size: cover;
+   background-position: center;
+}
+
+.hero img {
+   width: 100px;
+}
+
+.hero h1 {
+   word-spacing: 30px;
+   color: lightblue;
+
+   font-family: "Monoton", cursive;
+   font-weight: normal;
+
+   font-size: 60px;
+   text-shadow: 2px 2px 5px black;
+}
+
+.hero h2 {
+   color: rgb(233, 48, 119);
+   font-family: "Lobster", cursive;
+   font-size: 40px;
+}
+
+.hero p {
+   color: rgb(233, 48, 119);
+   font-family: "Lobster", cursive;
+   font-size: 30px;
+   margin-bottom: 30px;
+}
+
+.hero a {
+   color: white;
+   font-family: helvetica;
+   background-color: lightskyblue;
+   padding: 20px;
+   font-size: 30px;
+   border: 5px solid white;
+   box-shadow: 5px 5px 10px grey;
+   text-decoration: none;
+}
+
+.hero a:hover {
+   background-color: deeppink;
+}
+
+
+/*----------------------------------------------*/
+/* Video section */
+
+iframe {
+   width: 100%;
+   aspect-ratio: 16/9;
+}
+
+
+/*----------------------------------------------*/
+/* lineup section */
+
+.lineup {
+   display: flex;
+   justify-content: center;
+   flex-wrap: wrap;
+
+   background-color: orange;
+   padding: 60px;
+
+   background-image: url(images/lineupbackground.jpg);
+   background-size: cover;
+   background-position: center;
+
+   background-attachment: fixed;
+}
+
+
+.lineup a {
+   display: block;
+
+   font-family: "Staatliches", cursive;
+   color: #ab46d0;
+   font-size: 30px;
+
+   text-decoration: none;
+   background-color: rgba(255, 255, 255, 0.51);
+   margin: 10px;
+   padding: 10px;
+
+   transition: .5s;
+}
+
+.lineup a:hover {
+   color: #ff0101;
+   transform: scale(1.4) skew(10deg) rotate(10deg);
+}
+
+
+/*----------------------------------------------*/
+/* content section */
+
+.content {
+   background-color: white;
+   padding: 60px;
+}
+
+.content h1 {
+   font-family: "Staatliches", cursive;
+   font-size: 40px;
+   font-weight: normal;
+   text-align: center;
+   padding-bottom: 30px;
+
+   /* use an image as the background  */
+   background-image: url(images/lineupbackground.jpg);
+   background-clip: text;
+   -webkit-background-clip: text;
+   -webkit-text-fill-color: transparent;
+}
+
+
+.content h2 {
+   font-family: "Staatliches", cursive;
+   font-size: 20px;
+   color: rgb(49, 212, 249);
+   font-weight: normal;
+   text-align: center;
+   padding-bottom: 30px;
+}
+
+.content p {
+   font-family: "Lobster", cursive;
+   font-size: 50px;
+   color: rgb(249, 49, 142);
+   font-weight: normal;
+   text-align: center;
+   padding-bottom: 30px;
+}
+
+/*----------------------------------------------*/
+/* info section */
+
+.info {
+   display: flex;
+   flex-wrap: wrap;
+}
+
+.infobox {
+   background-color: rgba(0, 252, 252, 0.83);
+   width: 50%;
+}
+
+.infobox img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+}
+
+.infobox h2 {
+   font-family: "Monoton";
+   font-size: 50px;
+   font-weight: normal;
+   color: white;
+   text-align: center;
+   padding: 20px;
+}
+
+.infobox h3 {
+   font-family: "Staatliches", cursive;
+   font-size: 20px;
+   font-weight: normal;
+   color: rgb(255, 35, 182);
+   text-align: center;
+   padding: 20px;
+}
+
+.infobox p {
+   font-family: "Roboto";
+   font-size: 20px;
+   font-weight: normal;
+   color: white;
+   text-align: center;
+   padding: 20px;
+}
+
+.infobox h6 {
+   font-family: "Roboto";
+   font-size: 16px;
+   font-weight: normal;
+   font-style: italic;
+   color: white;
+   text-align: center;
+   padding: 20px;
+}
+
+.infobox a {
+   color: rgb(255, 35, 182);
+   text-decoration: none;
+}
+
+.infobox a:hover {
+   color: rgb(177, 14, 123);
+   text-decoration: underline;
+}
+
+
+/*----------------------------------------------*/
+/* footer section */
+
+.footer {
+   display: flex;
+   justify-content: space-between;
+   padding: 40px;
+   background-color: rgb(58, 120, 178);
+}
+
+.newsletter {
+   width: 30%;
+}
+
+.newsletter h2 {
+   font-family: "Staatliches", cursive;
+   font-size: 20px;
+   color: rgb(249, 49, 142);
+   font-weight: normal;
+}
+
+.newsletter p {
+   color: white;
+   font-family: "Roboto", sans-serif;
+   font-size: 14px;
+}
+
+.inputemail {
+   font-family: "Roboto", sans-serif;
+   font-size: 12px;
+   padding: 10px;
+   background-color: #e0e0e0;
+   border: 1px solid grey;
+   border-radius: 5px;
+   margin-top: 10px;
+   width: 70%;
+}
+
+.inputemail:focus {
+   background-color: white;
+   outline: none;
+   border: 1px solid red;
+}
+
+.inputemail::placeholder {
+   font-style: italic;
+}
+
+.sendemail {
+   font-family: "Staatliches", cursive;
+   padding: 10px;
+   background-image: linear-gradient(rgb(180, 234, 244), rgb(109, 188, 202));
+   border: 1px solid grey;
+   border-radius: 5px;
+   transition: 1s;
+}
+
+.sendemail:hover {
+   color: white;
+   background-image: linear-gradient(rgb(181, 244, 180), rgb(109, 202, 115));
+}
+
+.footerlinks a {
+   display: block;
+   padding: 10px;
+   font-family: "Staatliches", cursive;
+   font-size: 16px;
+   color: white;
+   text-decoration: none;
+   transition: 0.5s;
+}
+
+.footerlinks a:hover {
+   color: #ef0f6c;
+}
+
+.social img {
+   filter: grayscale(100%) drop-shadow(0px 0px 0px black);
+   padding: 5px;
+   transition: .5s;
+}
+
+.social img:hover {
+   filter: grayscale(0%) drop-shadow(5px 5px 4px black) saturate(10);
+   transform: scale(1.2) rotate(40deg);
+}
+
+/*----------------------------------------------*/
+/* artists page */
+/*----------------------------------------------*/
+
+.artisthero {
+   height: 300px;
+   background-image: url(images/artistbackground.jpg);
+}
+
+.artistcontent {
+   display: flex;
+   justify-content: space-evenly;
+   flex-wrap: wrap;
+   row-gap: 20px;
+   padding-top: 30px;
+   padding-bottom: 30px;
+   backdrop-filter: blur(15px);
+   background-color: rgba(255, 255, 255, 0.2);
+}
+
+.artistinfo {
+   width: 30%;
+   background-color: rgba(173, 216, 230, 0.58);
+   border-radius: 20px;
+   padding: 30px;
+}
+
+.pinkbg {
+   background-color: rgba(255, 107, 153, 0.5);
+}
+
+.artistinfo img {
+   width: 100%;
+   border: 10px solid white;
+   border-radius: 200px;
+   box-shadow: 2px 2px 5px grey;
+
+   filter: grayscale();
+   transition: 0.5s;
+}
+
+.artistinfo:hover img {
+   filter: none;
+   transform: scale(1.1) rotate(10deg);
+   box-shadow: 10px 10px 20px grey;
+}
+
+.artistdetails {
+   text-align: center;
+}
+
+.artistdetails h2 {
+   font-family: "Lobster";
+   font-size: 40px;
+   color: rgb(249, 49, 142);
+}
+
+.artistdetails p {
+   font-family: "Roboto";
+   padding-top: 30px;
+}
+
+/* ------------------------------------------------------ */
+/* MEDIA QUERY CSS */
+/* ------------------------------------------------------ */
+
+@media screen and (max-width: 1280px) {
+
+   /* body {
+      border: 10px solid yellow;
+   } */
+
+   /*----------------------------------------------*/
+   /* mobile navigation */
+
+   .navigation {
+      flex-direction: column;
+      justify-content: flex-start;
+      height: 90px;
+      overflow: hidden;
+      transition: 1s;
+   }
+
+   .active {
+      height: 400px !important;
+   }
+
+   .hamburger {
+      display: block !important;
+      font-size: 40px !important;
+   }
+
+   /* ---------------------------------------- */
+   /* Mobile Hero */
+
+   .hero h1 {
+      font-size: 7vw;
+   }
+
+   .hero h2 {
+      font-size: 5vw;
+   }
+
+   /* ---------------------------------------- */
+   /* Mobile lineup */
+
+   .lineup {
+      flex-direction: column;
+   }
+
+   .lineup a {
+      text-align: center;
+      font-size: 8vw;
+      color: white;
+   }
+
+   /* ---------------------------------------- */
+   /* Mobile content */
+
+   .content h1 {
+      font-size: 4vw;
+   }
+
+   .content h2 {
+      font-size: 3vw;
+   }
+
+   /*----------------------------------------------*/
+   /* mobile info */
+
+   .info {
+      flex-direction: column;
+   }
+
+   .infobox {
+      width: 100%;
+   }
+
+   .tickets {
+      order: -1;
+   }
+
+   .infobox img {
+      height: 400px;
+   }
+
+
+   /*----------------------------------------------*/
+   /* mobile footer */
+
+   .footer {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+   }
+
+   .newsletter {
+      width: 100%;
+   }
+
+   .newsletter h2 {
+      font-size: 6vw;
+   }
+
+   .newsletter p {
+      font-size: 3vw;
+   }
+
+   .footerlinks a {
+      font-size: 6vw;
+   }
+
+   /*----------------------------------------------*/
+   /* mobile artist page */
+
+   .artistcontent {
+      flex-direction: column;
+      align-items: center;
+   }
+
+   .artistinfo {
+      width: 80%;
+      text-align: center;
+   }
+
+   .artistinfo img {
+      width: 50%;
+   }
+
+   .artistdetails h2 {
+      padding-top: 30px;
+      font-size: 6vw;
+   }
+
+   .artistdetails p {
+      font-size: 3vw;
+   }
+
+
+}
