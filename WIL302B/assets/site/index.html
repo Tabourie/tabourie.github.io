@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sensory Space, interactive prototype v9.0</title>
+
+<!--
+  ===========================================================================
+  SENSORY SPACE, INTERACTIVE PROTOTYPE v9.0
+  Torrens University Australia, WIL302B Team T2
+  Peter Jopy, A00113261. Information architecture, wayfinding, navigation.
+
+  Conforms to Information Architecture map v9.0.
+
+  HOW TO RUN
+  Open this file locally with the assets folder sitting beside it, exactly as
+  it comes out of the zip. Nothing is fetched, so file:// works fine.
+
+    interactive-prototype-v9.html
+    assets/
+
+  HOW THIS FILE IS ORGANISED
+  Every component is one contiguous block: a comment banner, then its CSS,
+  then its JS. Global tokens and shared primitives live at the top. This is
+  deliberately structured for a port to React or any component framework, so
+  each block below maps to one component file.
+
+    00  GLOBAL          tokens, reset, typography, layout primitives
+    01  ICONS           the whole SVG set, one family, 24px 1.8 stroke
+    02  DATA            zones, applications, feelings, asset manifest
+    03  STATE           the store and the render loop
+    04  INTRO           entry screen
+    05  TOPBAR          persistent chrome, top
+    06  PILLBAR         persistent chrome, archway bar
+    07  BUBBLE          recommendation speech bubble
+    08  FOOTER          persistent chrome, footer
+    09  HOME            dashboard screen
+    10  ARCHWAY         archway category screen
+    11  PLACEHOLDERAPP  the fifteen placeholder application bodies
+    12  TOOL            tool screen, canvas plus scaffolding
+    13  LIBRARY         proposed component library
+    14  OVERLAY         all overlays, shared two column shell
+    15  BOOTSTRAP       event delegation and start
+
+  A NOTE ON WHAT IS REAL
+  Only the Focus timer works. Everything else inside a canvas is a static
+  placeholder. Anything drawn as developer scaffolding is deleted before
+  deployment. See the handoff document.
+  ===========================================================================
+-->
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     00  GLOBAL
+     Design tokens, reset, typography and layout primitives.
+     Tokens come from Kristine's design system guide. Archway colour is the
+     wayfinding system, C6, so it is never hardcoded outside the DATA block.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<style id="global">
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap');
+
+/* ---- reset ---- */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:'Poppins',system-ui,sans-serif;background:#2A2727;overflow:hidden}
+svg{display:block}
+button{font-family:inherit}
+
+/* ---- tokens, light ---- */
+#app{
+  --bg:#EEEEEE; --surface:#FFFFFF; --line:#DADADA; --line2:#C6C6C6;
+  --ink:#484545; --mut:#746E66; --accent:#2063A7;
+  --scrim:rgba(238,238,238,.62);
+  --pad:28px; --zone:1180px;
+  width:100%;height:100%;background:var(--bg);color:var(--ink);
+  overflow:hidden;display:flex;flex-direction:column;position:relative}
+
+/* ---- tokens, dark ---- */
+#app.dark{--bg:#1C1A1A;--surface:#262323;--line:rgba(255,255,255,.10);--line2:rgba(255,255,255,.18);
+  --ink:#EEEEEE;--mut:#B1B1B1;--scrim:rgba(28,26,26,.66)}
+
+/* ---- tokens, selectable tone on top of light and dark, Note 1.3 and 1.15 ---- */
+#app.tone-warm{--bg:#F6EFE7;--surface:#FFFBF6;--line:#E4D8CA;--line2:#D2C2AE;--ink:#4A403A;--mut:#7A6A5C;--scrim:rgba(246,239,231,.62)}
+#app.tone-warm.dark{--bg:#221C18;--surface:#2C2521;--line:rgba(255,240,225,.10);--line2:rgba(255,240,225,.2);--ink:#F2E7DC;--mut:#BCA994;--scrim:rgba(34,28,24,.66)}
+#app.tone-cool{--bg:#ECF1F5;--surface:#FBFDFF;--line:#D3DEE7;--line2:#BCCBD7;--ink:#3C464E;--mut:#68757F;--scrim:rgba(236,241,245,.62)}
+#app.tone-cool.dark{--bg:#171B1F;--surface:#212730;--line:rgba(225,240,255,.10);--line2:rgba(225,240,255,.2);--ink:#E7EEF4;--mut:#9EAFBC;--scrim:rgba(23,27,31,.66)}
+
+/* ---- reduced motion. Note 1.13, this only reaches the shell and the plate ---- */
+#app.norm *{animation:none!important;transition:none!important}
+
+/* ---- typography. Syne headings, Poppins body ---- */
+h1,h2,h3,.sechead,.hn,.zhn,.intro h1,.crumb,.backbtn,.pill button,.tname,.btn,.hcta,
+.face .fl,.zlab,.grp,.statecard .sn,.resrow,.hl,.slends,.seg span,.bub,.cvfs,.tag,
+.libh,.libt,.sslab,.gstep b,.discl b,.rsrow b,.tmr,.pmb b,.hcardex b,.pfname,.sdc h3
+  {font-family:'Syne',system-ui,sans-serif}
+
+/* ---- layout primitives ---- */
+.wrap{max-width:var(--zone);margin:0 auto;position:relative;z-index:1}
+.main{flex:1;padding:28px var(--pad) 150px;overflow:auto;position:relative}
+h1.big{font-size:32px;font-weight:700;line-height:1.2;margin-bottom:18px}
+.sechead{font-size:24px;font-weight:700;margin:28px 0 14px;line-height:1.22}
+
+/* ---- shared: tag pill. cards only, never a page heading ---- */
+.tag{display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:999px;
+  font-size:12px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;white-space:nowrap}
+.tag.lt{background:rgba(255,255,255,.92);color:#2B2828}
+
+/* ---- shared: buttons ---- */
+.btn{border:1px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:999px;
+  padding:13px 26px;font-size:15px;font-weight:600;cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.btn:hover{border-color:var(--accent)}
+.btn svg{width:18px;height:18px}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;justify-content:center}
+
+/* ---- shared: track, used by sliders and volume ---- */
+.trk{flex:1 1 150px;min-width:110px;height:6px;border-radius:999px;background:var(--line2);position:relative}
+.trk i{position:absolute;left:0;top:0;bottom:0;width:46%;border-radius:999px;display:block}
+.trk b{position:absolute;left:46%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;
+  border-radius:50%;background:var(--surface);border:2.5px solid var(--ink);display:block}
+
+/* ---- shared: control bar, the shared control language, Note 1.10 ---- */
+.tpal{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);
+  background:var(--bg);border-radius:14px;padding:12px 14px;width:100%;max-width:760px}
+.tpal .tpg{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);letter-spacing:.3px}
+.tpal .spacer{margin-left:auto}
+.tpb{height:42px;min-width:42px;padding:0 17px;border-radius:999px;border:2px solid var(--line2);
+  background:var(--surface);color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:'Syne',sans-serif}
+.tpb svg{width:17px;height:17px}
+.tpb.pri{border-color:transparent;color:#fff}
+
+/* ---- responsive. one shell, three breakpoints ---- */
+@media(max-width:1100px){
+  #app{--pad:20px}
+  .hfeel{display:none}
+}
+@media(max-width:820px){
+  h1.big,.subhead h1{font-size:26px}
+  .main{padding-bottom:168px}
+}
+@media(max-width:640px){
+  #app{--pad:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- the whole prototype renders into this one root -->
+<div id="app"></div>
+
+<!-- =======================================================================
+     01  ICONS
+     One icon family. 24px viewBox, 1.8 stroke, outline, rounded caps.
+     No exceptions, no second family, no default browser widgets.
+     In React this becomes one Icon component with a name prop.
+     ======================================================================= -->
+<script id="js-icons">
+const I={
+ home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
+ search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.2-3.2"/></svg>',
+ help:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.3a2.8 2.8 0 1 1 3.6 2.7c-.7.3-.8.7-.8 1.5"/><circle cx="12" cy="16.5" r=".6" fill="currentColor"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.6 3.1-5.5 7-5.5s7 1.9 7 5.5"/></svg>',
+ gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M10.6 3.3a1.4 1.4 0 0 1 2.8 0l.15 1.2a7 7 0 0 1 1.55.64l.96-.74a1.4 1.4 0 0 1 1.85 2.09l-.79.92a7 7 0 0 1 .64 1.55l1.2.15a1.4 1.4 0 0 1 0 2.8l-1.2.15a7 7 0 0 1-.64 1.55l.79.92a1.4 1.4 0 0 1-1.85 2.09l-.96-.74a7 7 0 0 1-1.55.64l-.15 1.2a1.4 1.4 0 0 1-2.8 0l-.15-1.2a7 7 0 0 1-1.55-.64l-.96.74a1.4 1.4 0 0 1-1.85-2.09l.79-.92a7 7 0 0 1-.64-1.55l-1.2-.15a1.4 1.4 0 0 1 0-2.8l1.2-.15a7 7 0 0 1 .64-1.55l-.79-.92a1.4 1.4 0 0 1 1.85-2.09l.96.74a7 7 0 0 1 1.55-.64z"/></svg>',
+ back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 8.5 5 12l4.5 3.5"/><path d="M5 12h9a5 5 0 0 1 5 5v.5"/></svg>',
+ arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>',
+ chev:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>',
+ play:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M9.5 7.5 17 12l-7.5 4.5z"/></svg>',
+ playf:'<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8.5 6 18 12l-9.5 6z"/></svg>',
+ sun:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2.6v2M12 19.4v2M21.4 12h-2M4.6 12h-2M18.6 5.4l-1.4 1.4M6.8 17.2l-1.4 1.4M18.6 18.6l-1.4-1.4M6.8 6.8 5.4 5.4"/></svg>',
+ moon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 14.6A8.5 8.5 0 0 1 9.4 3.8 8.5 8.5 0 1 0 20.2 14.6z"/></svg>',
+ acc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.3" r="1.8"/><path d="M4.6 8.6c4.9 1.6 9.9 1.6 14.8 0"/><path d="M12 8.2v5.2M12 13.4l-2.6 6.4M12 13.4l2.6 6.4"/></svg>',
+ tone:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none" opacity=".85"/></svg>',
+ motion:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12h3.6l2.4-6 4.2 12 2.3-6h5.9"/></svg>',
+ sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3.5 8h9M18 8h2.5M3.5 16h3.5M12.5 16h8"/><circle cx="15" cy="8" r="2.4"/><circle cx="9.5" cy="16" r="2.4"/></svg>',
+ type:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 18.5 8.4 6l5.2 12.5M4.9 14.4h7M15.4 18.5 18.3 10l2.9 8.5M16.3 15.7h4"/></svg>',
+ focusring:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.6" stroke-dasharray="3.4 3.4"/><circle cx="12" cy="12" r="3.2"/></svg>',
+ skip:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5v7a3 3 0 0 0 3 3h11"/><path d="M15.5 11.5 19 15l-3.5 3.5"/></svg>',
+ keys:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="2.6" y="6.4" width="18.8" height="11.2" rx="2.6"/><path d="M6.2 10h.02M9.7 10h.02M13.2 10h.02M16.7 10h.02M8 13.8h8"/></svg>',
+ heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.3-7-9.3A3.7 3.7 0 0 1 12 8a3.7 3.7 0 0 1 7 2.7c0 5-7 9.3-7 9.3z"/></svg>',
+ grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="3.4" width="7.2" height="7.2" rx="1.8"/><rect x="3.4" y="13.4" width="7.2" height="7.2" rx="1.8"/><rect x="13.4" y="13.4" width="7.2" height="7.2" rx="1.8"/></svg>',
+ bar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.6"/><path d="M3 9h18"/></svg>',
+ route:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.4 6H14a4 4 0 0 1 0 8H10a4 4 0 0 0 0 8"/></svg>',
+ expand:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"/></svg>',
+ shrink:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h5V4M20 9h-5V4M4 15h5v5M20 15h-5v5"/></svg>',
+ spark:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 13.7 9l5.5 1.7-5.5 1.7L12 18l-1.7-5.6L4.8 10.7 10.3 9z"/></svg>',
+ pause:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M9.5 6v12M14.5 6v12"/></svg>',
+ reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12a7.5 7.5 0 1 0 2.3-5.4"/><path d="M4.5 4v4h4"/></svg>',
+ volume:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9.5h3l4-3.2v11.4l-4-3.2H5z"/><path d="M16 9.4a3.6 3.6 0 0 1 0 5.2"/></svg>',
+ image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.6"/><circle cx="8.6" cy="9.6" r="1.6"/><path d="M3.6 17.4 9 12.4l4 3.4 3-2.4 4.4 4"/></svg>',
+ book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.2A2 2 0 0 1 6 3.4h13v14H6a2 2 0 0 0-2 2z"/><path d="M4 19.4a2 2 0 0 1 2-2h13v3.2H6a2 2 0 0 1-2-1.2z"/></svg>',
+ cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.4" y="5" width="17.2" height="15.4" rx="2.6"/><path d="M3.4 9.6h17.2M8 3.2v3.4M16 3.2v3.4"/></svg>',
+ warn:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.4 21 19.6H3z"/><path d="M12 10v4"/><circle cx="12" cy="17" r=".7" fill="currentColor"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.6 10 17.4 19.4 7"/></svg>',
+ plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+ minus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 12h14"/></svg>',
+ close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+ leaf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20c0-8.5 5-13 16-13 0 9.3-5.2 13-13.2 13H4z"/><path d="M8.5 15.5c2-2.7 4.8-4.4 8.5-5.5"/></svg>',
+ users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c0-3 2.5-4.6 5.5-4.6s5.5 1.6 5.5 4.6"/><path d="M16 5.6a3 3 0 0 1 0 5.7"/><path d="M17.6 14.6c2 .6 3.4 2 3.4 4.4"/></svg>',
+ bolt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M13 3 5 13h6l-2 8 8-11h-6z"/></svg>',
+ wave:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 8q2.5-2.5 5 0t5 0 5 0"/><path d="M3 13q2.5-2.5 5 0t5 0 5 0"/><path d="M3 18q2.5-2.5 5 0t5 0 5 0"/></svg>',
+ menu:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+ lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.4" y="10.4" width="15.2" height="10" rx="2.4"/><path d="M8 10.4V7.6a4 4 0 0 1 8 0v2.8"/></svg>',
+ info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.8" r=".8" fill="currentColor"/></svg>',
+ mail:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.4" width="18" height="13.2" rx="2.4"/><path d="M3.8 6.6 12 13l8.2-6.4"/></svg>'
+};
+</script>
+
+<!-- =======================================================================
+     02  DATA
+     The whole content model. Four archways, fifteen applications, five feelings.
+     Each application carries its 3.x reference, its type tag and its proposed owner,
+     which is what the information architecture map and the handoff document read from.
+     Archway colour lives here and only here, because it is the wayfinding system, C6.
+     Asset paths resolve to ./assets. Replace the files, not the code.
+     ======================================================================= -->
+<script id="js-data">
+const ZI={calm:I.wave,excite:I.bolt,social:I.users,support:I.heart};
+function faceSvg(mouth,brow){
+ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+  +'<circle cx="12" cy="12" r="9"/><circle cx="9.2" cy="10" r=".85" fill="currentColor" stroke="none"/><circle cx="14.8" cy="10" r=".85" fill="currentColor" stroke="none"/>'
+  +(brow||'')+'<path d="'+mouth+'"/></svg>';
+}
+const AV={calm:'avatar-calm-blue',excite:'avatar-excite-orange',social:'avatar-social-purple',support:'avatar-support-yellow'};
+/* every still is a file in ./assets. nothing is fetched, so file:// is fine. */
+const A=new Proxy({},{get:function(t,k){return 'assets/'+String(k)+'.png';}});
+const LOGO='assets/torrens-logo.png';
+/* two Elena plates cover four archways for now, Note 1.12 */
+const PLATE_CALM=['assets/plate-calm.webm','assets/plate-calm.mp4'];
+const PLATE_ALT =['assets/plate-alt.webm','assets/plate-alt.mp4'];
+const VIDS={calm:PLATE_CALM,excite:PLATE_ALT,social:PLATE_ALT,support:PLATE_CALM};
+const S=[
+ {k:'struggling',l:'Struggling',ph:"you're struggling",z:'support',t:'Talk to someone',c:'#FFD011',tx:'#8C7400',on:'#241D00',
+  face:faceSvg('M8.4 16.6q3.6-3.4 7.2 0','<path d="M7.6 7.8l2.2 1M16.4 7.8l-2.2 1"/>'),
+  d:'Support first. Real people and real services, nothing automated.'},
+ {k:'overwhelmed',l:'Overwhelmed',ph:"you're overwhelmed",z:'calm',t:'Soundscape',c:'#2063A7',on:'#fff',
+  face:faceSvg('M8.6 15.8q3.4-2 6.8 0',''),
+  d:'Somewhere quiet. Slow tools, low input, nothing that asks for a fast response.'},
+ {k:'neutral',l:'Just here',ph:"you're just here",z:null,t:null,c:null,on:'#fff',
+  face:faceSvg('M8.8 15.2h6.4',''),
+  d:'No recommendation. Every archway is open, pick whichever you like.'},
+ {k:'energised',l:'Energised',ph:"you're energised",z:'excite',t:'Orb catcher',c:'#E04213',on:'#fff',
+  face:faceSvg('M8.6 14.4q3.4 2.2 6.8 0',''),
+  d:'Something with momentum. Short bursts, nothing that needs a long run-up.'},
+ {k:'social',l:'Up for people',ph:"you're up for people",z:'social',t:'Avatar creator',c:'#A37AC0',tx:'#6C4B9B',on:'#fff',
+  face:faceSvg('M8 13.9q4 3.8 8 0',''),
+  d:'Around other people, at whatever level you can manage today.'}
+];
+const Z={
+ calm:{l:'Calm',c:'#2063A7',deep:'#133C6B',tint:'#BBD9F4',rgb:'32,99,167',on:'#fff',art:'calm-archway',
+  title:'Tools for slowing down, regulating and reflecting. Choose the one that best matches what you need right now.',style:'solid',
+  tools:[
+   {n:'Soundscape',ref:'3.1',d:'Mix calming sounds to settle in',tag:'Media',owner:'Oscar Valencia',body:'sound',img:'calm-soundscape',ctrl:1,cta:'Open soundscape'},
+   {n:'Breathing',ref:'3.2',d:'Slow your breath down with a paced visual guide',tag:'Tool',owner:'Andrew',body:'breathing',img:'calm-breathing',ctrl:1},
+   {n:'Grounding',ref:'3.3',d:'A five senses check-in',tag:'Tool',owner:'Needs an owner',body:'ground',img:'calm-grounding'}]},
+ excite:{l:'Excite',c:'#E04213',deep:'#BB3E1D',tint:'#FDE0C6',rgb:'224,66,19',on:'#fff',art:'excite-archway',
+  title:'Tools for lifting energy and getting moving again. Short bursts, nothing that needs a long run-up.',style:'grad',
+  tools:[
+   {n:'Orb catcher',ref:'3.4',d:'A slow, low pressure catching game',tag:'Game',owner:'Tristan Moore',body:'orb',img:'excite-orb-catcher',ctrl:1,cta:'Play orb catcher'},
+   {n:'Focus timer',ref:'3.5',d:'Pick a length, start the clock, finish one thing',tag:'Tool',owner:'Needs an owner',body:'timer',img:'excite-focus-timer-ring'},
+   {n:'Jumping game',ref:'3.6',d:'A quick burst of movement and play',tag:'Game',owner:'William Salvo',body:'game',img:'excite-jumping-game-arc',ctrl:1},
+   {n:'Quick win',ref:'3.7',d:'A tiny task to build momentum',tag:'Tool',owner:'Needs an owner',body:'generic',img:'excite-quick-win'},
+   {n:'Mini games',ref:'3.8',d:'Short bursts of play',tag:'Game',owner:'William Salvo',body:'game',img:'excite-mini-games',ctrl:1}]},
+ social:{l:'Social',c:'#A37AC0',tx:'#6C4B9B',deep:'#4B336F',tint:'#D4BFE5',rgb:'163,122,192',on:'#fff',art:'social-archway',
+  title:'Tools for being around other people, at whatever level you can manage today.',style:'grad',
+  tools:[
+   {n:'Avatar creator',ref:'3.9',d:'Build a character that is yours, then take it with you across the space',tag:'Social',owner:'Robin and Pat on character art, interface still needs an owner',body:'avatar',img:'social-avatar-creator',cta:'Build your avatar'},
+   {n:'Rooms',ref:'3.10',d:'Drop into a shared space',tag:'Social',owner:'Needs an owner',body:'generic',img:'social-rooms'},
+   {n:'Check-ins',ref:'3.11',d:'A light prompt to connect',tag:'Social',owner:'Needs an owner',body:'generic',img:'social-check-ins'}]},
+ support:{l:'Support',c:'#FFD011',tx:'#8C7400',deep:'#8C7400',tint:'#FFF7C8',rgb:'255,208,17',on:'#241D00',art:'support-archway',
+  title:'Tools and real services for when you need a hand. Nothing here is automated advice.',style:'solid',
+  tools:[
+   {n:'Talk to someone',ref:'3.12',d:'Find a peer, a friend, or a real person to talk it through with',tag:'Social',owner:'Needs client confirmation, Note 1.6',body:'talk',img:'support-talk-to-someone',cta:'Find someone'},
+   {n:'Resources',ref:'3.13',d:'Guides, readings and real university services',tag:'Media',owner:'Needs client confirmation, Note 1.6',body:'resources',img:'support-resources'},
+   {n:'Book a chat',ref:'3.14',d:'Book time with a real person',tag:'Tool',owner:'Needs an owner',body:'generic',img:'support-book-a-chat'},
+   {n:'Worries jar',ref:'3.15',d:'Put it down for a while',tag:'Tool',owner:'William Salvo',body:'jar',img:'support-worries-jar'},
+   {n:'Helplines',d:'A vetted crisis line, off-site',tag:'Media',ext:true,img:'support-talk-to-someone'}]}
+};
+const order=['calm','excite','social','support'];
+</script>
+
+<!-- =======================================================================
+     03  STATE
+     One plain object holding everything. No framework, no store library.
+     Every component below is a pure function of this state that returns an HTML string,
+     which is why the port to React is mostly mechanical.
+     TM is the only stateful side thing, because the Focus timer actually runs.
+     ======================================================================= -->
+<script id="js-state">
+let st={screen:'intro',zone:null,tool:null,ov:null,dark:false,tone:'default',feel:2,rm:false,fs:false,rec:false,av:null,ts:1};
+const TM={sec:1500,len:1500,run:false,iv:null};
+let bubT=null;
+const app=document.getElementById('app');
+const B=function(){return S[st.feel];};
+function TX(z){return Z[z].tx||Z[z].c;}
+function SC(s){return s.tx||s.c;}
+function acc(){ if(st.zone) return Z[st.zone].c; var b=B(); return b.c||'var(--line2)'; }
+function findTool(z,n){var r=null;Z[z].tools.forEach(function(p){if(p.n===n)r=p;});return r;}
+</script>
+
+<!-- =======================================================================
+     04  INTRO
+     Entry screen. Torrens logo above the title, the Calm plate behind at 22 percent,
+     no buttons at all. Auto advances to the dashboard after three seconds. Note 1.18.
+     ======================================================================= -->
+<style id="css-intro">
+/* selectable tones, on top of light and dark. Note 1.3 */
+
+.wrap{max-width:var(--zone);margin:0 auto;position:relative;z-index:1}
+</style>
+
+<!-- =======================================================================
+     05  TOPBAR
+     Persistent chrome, top. On every screen, C1. Never moves, fades or hides.
+     Carries the home button, the breadcrumb, back, the feeling chip and five overlay
+     triggers. Every one of those opens an overlay, never a page, C2.
+     ======================================================================= -->
+<style id="css-topbar">
+.top{display:flex;align-items:center;gap:12px;padding:15px var(--pad);background:var(--surface);position:relative;z-index:14}
+.topin{display:flex;align-items:center;gap:12px;width:100%;max-width:var(--zone);margin:0 auto}
+.hmbtn{display:flex;align-items:center;gap:9px;cursor:pointer;background:none;border:none}
+.hmbtn .hi{width:30px;height:30px;color:var(--ink)}
+.crumb{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--mut);font-weight:500;letter-spacing:.2px;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.crumb b{font-weight:600;color:var(--ink)}
+.backbtn{width:38px;height:38px;border-radius:11px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 8px 18px -8px rgba(0,0,0,.45)}
+.backbtn:hover{filter:brightness(1.06)}.backbtn svg{width:20px;height:20px;stroke-width:2}
+.topr{margin-left:auto;display:flex;gap:8px;align-items:center;flex:none}
+.ic{width:36px;height:36px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.ic svg{width:19px;height:19px}
+.hfeel{font-size:14px;font-weight:500;white-space:nowrap;margin-right:2px;cursor:pointer;color:var(--mut);letter-spacing:.3px}
+.feelchip{display:flex;align-items:center;gap:7px;height:36px;padding:0 13px 0 10px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;color:var(--ink);margin-right:4px;font-family:'Syne',sans-serif;white-space:nowrap}
+.feelchip svg{width:19px;height:19px}
+.acbar{height:4px;background:var(--line2);transition:background .25s;position:relative;z-index:14}
+</style>
+<script id="js-topbar">
+function topbar(){
+ var b=B();
+ var cr='<button class="hmbtn" data-a="home"><span class="hi">'+I.home+'</span></button><span class="crumb">';
+ cr+='<b data-a="home" style="cursor:pointer">Home</b>';
+ if(st.zone) cr+=' <span>&#8250;</span> <b data-a="zone" data-z="'+st.zone+'" style="color:'+TX(st.zone)+';cursor:pointer">'+Z[st.zone].l+'</b>';
+ if(st.tool) cr+=' <span>&#8250;</span> <span>'+st.tool+'</span>';
+ cr+='</span>';
+ var back=(st.screen!=='home')?'<button class="backbtn" data-a="back" title="Back" style="background:'+(st.zone?Z[st.zone].c:'var(--ink)')+';color:'+(st.zone?Z[st.zone].on:'#fff')+'">'+I.back+'</button>':'';
+ var shim='<span class="hfeel" data-a="ov" data-v="feeling">How are you feeling today?</span>';
+ var chip='<button class="feelchip" data-a="ov" data-v="feeling" title="How are you feeling"><span style="color:'+(b.c||'var(--mut)')+'">'+b.face+'</span><span>'+b.l+'</span></button>';
+ return '<div class="top"><div class="topin">'+cr+back+'<div class="topr">'+shim+chip
+  +'<button class="ic" data-a="ov" data-v="menu" title="Menu">'+I.menu+'</button>'
+  +'<button class="ic" data-a="ov" data-v="search" title="Search">'+I.search+'</button>'
+  +'<button class="ic" data-a="ov" data-v="help" title="Help">'+I.help+'</button>'
+  +'<button class="ic" data-a="ov" data-v="settings" title="Settings">'+I.gear+'</button>'
+  +'<button class="ic" data-a="ov" data-v="account" title="Profile">'+I.user+'</button>'
+  +'<button class="ic" data-a="dark" title="Light or dark">'+(st.dark?I.sun:I.moon)+'</button>'
+  +'</div></div></div><div class="acbar" style="background:'+acc()+'"></div>';
+}
+</script>
+
+<!-- =======================================================================
+     06  PILLBAR
+     Persistent chrome, the archway bar. On every screen, C1.
+     The recommended archway button glows in its own colour until the bubble times out.
+     ======================================================================= -->
+<script id="js-pillbar">
+function pill(){
+ var b=B();
+ var items='<button class="'+(st.screen==='home'?'on-home':'')+'" data-a="home"><span style="color:var(--ink)">'+I.home+'</span>Home</button>';
+ items+=order.map(function(z){
+   var on=st.zone===z;var rec=(st.rec&&b.z===z&&!on);
+   var s2=on?'background:'+Z[z].c+';color:'+Z[z].on:'';var icol=on?Z[z].on:TX(z);
+   return '<button class="'+(on?'on':'')+(rec?' rec':'')+'" style="'+s2+'" data-a="zone" data-z="'+z+'"><span style="color:'+icol+'">'+ZI[z]+'</span>'+Z[z].l+'</button>';}).join('');
+ return '<div class="pill" id="pillbar">'+items+'</div>';
+}
+</script>
+
+<!-- =======================================================================
+     07  BUBBLE
+     The recommendation. One speech bubble, avatar plus a line plus one action.
+     Width is measured off the archway bar at render time so it can never be wider.
+     Pops in, times out after six seconds, and dismisses when the user takes it.
+     This is the whole of what the feeling selector does. It is a router, C8.
+     ======================================================================= -->
+<style id="css-bubble">
+.bubwrap{position:absolute;left:50%;bottom:118px;z-index:9;transform:translateX(-50%);display:flex;justify-content:center;pointer-events:none}
+.bub{pointer-events:auto;position:relative;background:var(--gc);border-radius:22px;padding:15px 17px;box-shadow:0 22px 44px -16px rgba(0,0,0,.5);display:flex;align-items:center;gap:12px}
+.bub:after{content:"";position:absolute;left:50%;bottom:-13px;transform:translateX(-50%);width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-top:14px solid var(--gc)}
+.bubav{width:44px;height:44px;border-radius:50%;flex:none;background:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.bubav img{width:100%;height:100%;object-fit:cover;transform:scale(1.06)}
+.bubtx{font-size:15px;font-weight:700;line-height:1.35;letter-spacing:.1px;color:var(--gon)}
+.bubtx em{font-style:normal;font-weight:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:2px}
+.bubgo{border:none;background:var(--surface);color:var(--ink);border-radius:999px;height:42px;padding:0 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif;flex:none;white-space:nowrap;box-shadow:0 3px 10px -4px rgba(0,0,0,.3)}
+.bubx{width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,.35);color:var(--gon);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;font-size:12px}
+@media(prefers-reduced-motion:no-preference){
+ .bub{animation:bpop .42s cubic-bezier(.2,1.3,.4,1) both}
+ .bub.out{animation:bout .3s ease forwards}
+}
+@keyframes bpop{0%{transform:translateY(26px) scale(.82);opacity:0}60%{transform:translateY(0) scale(1.03);opacity:1}100%{transform:none;opacity:1}}
+@keyframes bout{to{transform:translateY(14px) scale(.9);opacity:0}}
+</style>
+<script id="js-bubble">
+/* one speech bubble. never wider than the pill bar. pops in, times out. */
+function bubble(){
+ var b=B();
+ if(!st.rec||!b.z) return '';
+ var z=Z[b.z];
+ return '<div class="bubwrap" id="bubwrap"><div class="bub" id="bub" style="--gc:'+z.c+';--gon:'+z.on+'">'
+  +'<span class="bubav"><img src="'+A[AV[b.z]]+'" alt=""></span>'
+  +'<span class="bubtx">Because '+b.ph+', we recommend <em>'+b.t+'</em> in <em>'+z.l+'</em>.</span>'
+  +'<button class="bubgo" data-a="tool" data-z="'+b.z+'" data-t="'+b.t+'">Take me there</button>'
+  +'<button class="bubx" data-a="norec" title="Dismiss">&#10005;</button></div></div>';
+}
+</script>
+
+<!-- =======================================================================
+     08  FOOTER
+     Persistent chrome, footer. On every screen, C1. Every item opens an overlay, C2.
+     ======================================================================= -->
+<style id="css-footer">
+.pill{position:absolute;bottom:52px;left:50%;transform:translateX(-50%);display:flex;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 9px;box-shadow:0 18px 44px -14px rgba(0,0,0,.5),0 3px 10px -4px rgba(0,0,0,.28);z-index:8;max-width:calc(100% - 32px);overflow:auto}
+.pill button{height:48px;padding:0 17px;border-radius:999px;border:none;background:none;color:var(--mut);cursor:pointer;display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;letter-spacing:.3px;white-space:nowrap}
+.pill button svg{width:21px;height:21px}.pill button:hover{background:var(--bg)}
+.pill button.on-home{background:var(--bg)}
+.footbar{position:absolute;bottom:15px;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:0 var(--pad);z-index:5;pointer-events:none;gap:14px}
+.footbar .fg{display:flex;gap:18px;pointer-events:auto;align-items:center}
+.footbar a{font-size:13px;color:var(--ink);opacity:.66;text-decoration:underline;text-underline-offset:2px;cursor:pointer;font-weight:400;letter-spacing:.4px;white-space:nowrap}
+.footbar a:hover{opacity:1}
+</style>
+<script id="js-footer">
+function footbar(){
+ return '<div class="footbar"><div class="fg"><a data-a="ov" data-v="about">About the space</a><a data-a="ov" data-v="contact">Contact us / feedback</a></div>'
+  +'<div class="fg"><a data-a="ov" data-v="privacy">Privacy</a><a data-a="ov" data-v="terms">Terms</a><a style="opacity:.5;text-decoration:none;cursor:default">Made by T2 WIL302B &lt;3</a></div></div>';
+}
+</script>
+
+<!-- =======================================================================
+     09  HOME
+     The dashboard. Promotional video hero, the feeling router, and the four archway cards.
+     The wave plate runs behind everything, masked away from the centre column so it
+     reads at the edges only. The feeling row and the archway card row come from
+     Fernaldy and Brooke, fitted to this frame.
+     ======================================================================= -->
+<style id="css-home">
+.homebg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.homebg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(.72) brightness(1.22);opacity:.3}
+.homebg .hmask{position:absolute;inset:0;background:
+ radial-gradient(ellipse 44% 78% at 50% 50%,var(--bg) 40%,rgba(0,0,0,0) 100%),
+ linear-gradient(180deg,var(--bg) 0%,rgba(0,0,0,0) 16%,rgba(0,0,0,0) 84%,var(--bg) 100%)}
+#app.dark .homebg video{opacity:.22;filter:grayscale(1) contrast(.8) brightness(.7)}
+
+.hero{position:relative;aspect-ratio:21/8;border-radius:18px;border:1.5px dashed var(--line2);overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:22px;background:var(--surface)}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.9}
+.hero .hov{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(255,255,255,.82);border-radius:16px;padding:16px 26px}
+#app.dark .hero .hov{background:rgba(28,26,26,.72)}
+.hero .hl{font-size:18px;font-weight:600;color:var(--ink)}
+.hero .hd{font-size:14px;color:var(--mut);letter-spacing:.3px;text-align:center}
+.notetag{position:absolute;top:12px;left:14px;z-index:3;font-size:13px;font-weight:500;color:var(--mut);border:1px solid var(--line2);border-radius:999px;padding:3px 11px;background:var(--bg);letter-spacing:.4px}
+.playdot{width:50px;height:50px;border-radius:50%;border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;color:var(--mut)}
+.feelcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+.feelcard .ft{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:10px;line-height:1.22}
+.feelcard .fs{font-size:15px;color:var(--mut);margin-top:5px;font-weight:400;letter-spacing:.3px}
+.facerow{display:flex;gap:11px;margin-top:18px;flex-wrap:wrap}
+.face{flex:1 1 150px;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:15px 8px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:9px;color:var(--mut);transition:border-color .18s,transform .18s}
+.face:hover{transform:translateY(-2px)}
+.face svg{width:36px;height:36px}
+.face .fl{font-size:14px;font-weight:500;letter-spacing:.3px;text-align:center}
+.face.on{background:var(--surface);border-width:2px;padding:14px 7px 11px}
+.zcards{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.zcard{aspect-ratio:9/13;border-radius:18px;overflow:hidden;cursor:pointer;position:relative;box-shadow:0 12px 30px -16px rgba(0,0,0,.35);transition:transform .18s;background:var(--surface)}
+.zcard:hover{transform:translateY(-4px)}
+.zcard .art{position:absolute;inset:0}.zcard .art svg{position:absolute;inset:0;width:100%;height:100%}
+.zcard .zart{position:absolute;left:8%;right:8%;top:10%;bottom:26%;object-fit:contain;filter:drop-shadow(0 10px 22px rgba(0,0,0,.3))}
+.zcard .zlab{position:absolute;left:0;right:0;bottom:0;padding:15px;display:flex;align-items:center;gap:9px;color:#fff;font-family:'Syne',sans-serif;font-size:17px;font-weight:700;letter-spacing:.3px;z-index:3}
+.zcard .zlab span{width:20px;height:20px}.zcard .zlab svg{width:20px;height:20px}
+.zcard.rec{outline:3px solid var(--gc);outline-offset:2px}
+.zcard.rec .zlab{background:var(--gc)!important;color:var(--gon)!important}
+@media(prefers-reduced-motion:no-preference){
+ .zcard.rec{animation:glow 2.1s ease-in-out infinite}
+ .pill button.rec{animation:glowsm 2.1s ease-in-out infinite}
+}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 var(--gs),0 12px 30px -16px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 12px transparent,0 12px 34px -12px var(--gs)}}
+@keyframes glowsm{0%,100%{box-shadow:0 0 0 0 var(--gs)}50%{box-shadow:0 0 0 9px transparent}}
+.pill button.rec{background:var(--gc)!important;color:var(--gon)!important}
+.pill button.rec span{color:var(--gon)!important}
+</style>
+<script id="js-home">
+function home(){
+ var b=B();
+ var hero='<div class="hero"><img src="'+A['promo-video-still-21x9']+'" alt="">'
+  +'<div class="hov"><span class="playdot">'+I.play+'</span><div class="hl">Promotional video</div>'
+  +'<div class="hd">1.1 Homepage hero. Placeholder still. 3D team supplies finished piece.</div></div></div>';
+ var faces='<div class="facerow">'+S.map(function(s,i){
+   var on=i===st.feel;var col=SC(s)||'var(--ink)';var fill=s.c||'var(--ink)';
+   return '<button class="face'+(on?' on':'')+'" data-a="feel" data-i="'+i+'" style="'+(on?'border-color:'+fill+';color:'+col:'')+'">'
+    +'<span class="fi" style="color:'+fill+';opacity:'+(on?'1':'.45')+'">'+s.face+'</span><span class="fl">'+s.l+'</span></button>';
+  }).join('')+'</div>';
+ var cards='<div class="zcards">'+order.map(function(z){
+   var g='linear-gradient(180deg,rgba('+Z[z].rgb+',0) 0%,rgba('+Z[z].rgb+',.6) 46%,rgba('+Z[z].rgb+',.98) 100%)';
+   var rec=(st.rec&&b.z===z);
+   var vars=rec?'--gc:'+Z[z].c+';--gon:'+Z[z].on+';--gs:rgba('+Z[z].rgb+',.55);':'';
+   return '<div class="zcard'+(rec?' rec':'')+'" style="'+vars+'background:linear-gradient(165deg,'+Z[z].tint+','+Z[z].deep+')" data-a="zone" data-z="'+z+'">'
+    +'<img class="zart" src="'+A[Z[z].art]+'" alt="">'
+    +'<div class="zlab" style="background:'+g+'"><span>'+ZI[z]+'</span>'+Z[z].l+'</div></div>';}).join('')+'</div>';
+ var bgv='<div class="homebg"><video data-src="calm" autoplay muted loop playsinline></video><div class="hmask"></div></div>';
+ return bgv+'<div class="wrap"><h1 class="big">Welcome back, Lorem Ipsum</h1>'+hero
+  +'<div class="feelcard"><div class="ft"><span>&#128075;</span>Hey! How are you feeling right now?</div>'
+  +'<div class="fs">We will recommend you where to go, depending on how you feel.</div>'
+  +faces+'</div>'
+  +'<div class="sechead">Explore archways</div>'+cards+'</div>';
+}
+</script>
+
+<!-- =======================================================================
+     10  ARCHWAY
+     The archway category screen. Featured card, then the grid, then on Support only,
+     the reach out banner from Vinicius' wireframe.
+     The plate is a video, tinted to the archway colour by a multiply layer, Note 1.12.
+     ======================================================================= -->
+<style id="css-archway">
+.zonebg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0;overflow:hidden}
+.zonebg video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(.82) brightness(1.12);opacity:.5}
+.zonebg .vtint{position:absolute;inset:0;mix-blend-mode:multiply;opacity:.5}
+.ztint{position:absolute;inset:0;mix-blend-mode:color;opacity:.8}
+.zonescrim{position:absolute;inset:0;background:linear-gradient(180deg,var(--bg) 0%,var(--bg) 11%,rgba(0,0,0,0) 36%,rgba(0,0,0,0) 58%,var(--bg) 95%,var(--bg) 100%),var(--scrim)}
+.zc{position:relative;z-index:1}
+.zhead{margin-bottom:2px}
+.zhn{font-size:30px;font-weight:700;display:flex;align-items:center;gap:12px;line-height:1.2}
+.zhn .zti{width:28px;height:28px}.zhn .zti svg{width:28px;height:28px}
+.zhr{height:2px;border-radius:2px;width:52px;margin:13px 0 11px}
+.zhd{font-size:15px;color:var(--mut);letter-spacing:.2px;line-height:1.55;max-width:620px}
+.herotool{position:relative;border-radius:18px;overflow:hidden;cursor:pointer;height:280px;margin:22px 0 26px;box-shadow:0 14px 34px -16px rgba(0,0,0,.5)}
+.herotool .tart{position:absolute;inset:0;background-size:cover;background-position:center}
+.herotool .hg{position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.9) 16%,rgba(0,0,0,.4) 62%,rgba(0,0,0,0));z-index:2}
+.herotool .hill{position:absolute;right:5%;top:8%;bottom:8%;object-fit:contain;z-index:2;filter:drop-shadow(0 12px 26px rgba(0,0,0,.45))}
+.herotool .hc{position:absolute;inset:0;padding:28px 32px;display:flex;flex-direction:column;justify-content:center;max-width:600px;z-index:3}
+.herotool .hn{font-size:32px;font-weight:700;color:#fff;line-height:1.2}
+.herotool .hdd{font-size:15px;color:rgba(255,255,255,.86);margin-top:8px;line-height:1.5;letter-spacing:.3px}
+.hcta{margin-top:18px;width:fit-content;background:#fff;color:#484545;border-radius:999px;padding:12px 22px;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;letter-spacing:.3px}
+.herotags{display:flex;gap:8px;margin-bottom:11px}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:17px}
+.tcard{position:relative;aspect-ratio:3/4;border-radius:16px;overflow:hidden;cursor:pointer;box-shadow:0 12px 30px -14px rgba(0,0,0,.45);border:1px solid rgba(0,0,0,.06);transition:transform .18s}
+.tcard:hover{transform:translateY(-3px)}
+.tart{position:absolute;inset:0;background-size:cover}
+.tcard .cart{position:absolute;left:12%;right:12%;top:8%;height:52%;object-fit:contain;z-index:3;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35))}
+.tacts{display:flex;align-items:center;gap:12px;margin-left:auto}
+.tcard .qm{width:25px;height:25px;border-radius:50%;border:1px solid rgba(255,255,255,.45);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none;z-index:4}
+.tcard .ctag{position:absolute;top:12px;left:12px;z-index:4}
+.tcard.solid .tart,.tcard.solid .ztint{bottom:88px}
+.tcard.solid .tfoot{position:absolute;left:0;right:0;bottom:0;height:88px;background:#2B2828;display:flex;align-items:center;padding:13px 16px;z-index:3}
+.tcard .tname{font-size:17px;font-weight:600;color:#fff;letter-spacing:.2px}
+.tcard.solid .td{font-size:13px;color:rgba(255,255,255,.66);margin-top:3px;line-height:1.35}
+.tcard.grad .tgrad{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 34%,rgba(0,0,0,.45) 58%,rgba(0,0,0,.92) 100%);z-index:2}
+.tcard.grad .tover{position:absolute;left:0;right:0;bottom:0;padding:16px;display:flex;align-items:flex-end;z-index:3}
+.tcard.grad .td{font-size:13px;color:rgba(255,255,255,.88);margin-top:3px;line-height:1.35}
+
+.sosbar{margin-top:26px;border-radius:18px;padding:26px 28px;text-align:center;background:rgba(255,255,255,.72);border:1px solid var(--line)}
+#app.dark .sosbar{background:rgba(38,35,35,.72)}
+.sosbar h3{font-size:22px;font-weight:700;line-height:1.25;margin-bottom:16px}
+.sosbtns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.sosbtns button{border:none;cursor:pointer;border-radius:999px;padding:14px 28px;font-size:15px;font-weight:600;font-family:'Syne',sans-serif;min-width:220px}
+.sosnote{font-size:13px;color:var(--mut);margin-top:14px;letter-spacing:.3px}
+</style>
+<script id="js-archway">
+function tagChip(t){return '<span class="tag lt">'+t+'</span>';}
+function toolcard(z,p){
+ var ext=!!p.ext;
+ var acts='<div class="tacts"><span class="qm" data-a="ov" data-v="toolinfo">?</span></div>';
+ var bgg='background:linear-gradient(165deg,'+Z[z].tint+','+Z[z].deep+')';
+ var art='<div class="tart" style="'+bgg+'"></div><img class="cart" src="'+A[p.img]+'" alt="">';
+ var chip='<span class="ctag">'+tagChip(p.tag)+'</span>';
+ if(Z[z].style==='solid'){
+   return '<div class="tcard solid" data-a="'+(ext?'ext':'tool')+'" data-z="'+z+'" data-t="'+p.n+'">'+art+chip+'<div class="tfoot"><div><div class="tname">'+p.n+(ext?' &#8599;':'')+'</div><div class="td">'+p.d+'</div></div>'+acts+'</div></div>';
+ }
+ return '<div class="tcard grad" data-a="'+(ext?'ext':'tool')+'" data-z="'+z+'" data-t="'+p.n+'">'+art+chip+'<div class="tgrad"></div><div class="tover"><div><div class="tname">'+p.n+(ext?' &#8599;':'')+'</div><div class="td">'+p.d+'</div></div>'+acts+'</div></div>';
+}
+function plate(z){
+ return '<div class="zonebg">'
+   +'<video id="plate" data-src="'+z+'" autoplay muted loop playsinline></video>'
+   +'<div class="vtint" style="background:'+Z[z].c+'"></div>'
+   +'<div class="ztint" style="background:'+Z[z].c+'"></div><div class="zonescrim"></div></div>';
+}
+function zone(){
+ var z=Z[st.zone],h=z.tools[0];
+ var heroHtml='<div class="herotool" data-a="tool" data-z="'+st.zone+'" data-t="'+h.n+'">'
+  +'<div class="tart" style="background:linear-gradient(120deg,'+z.deep+' 10%,'+z.tint+')"></div><div class="hg"></div>'
+  +'<img class="hill" src="'+A[h.img]+'" alt="">'
+  +'<div class="hc"><div class="herotags">'+tagChip(h.tag)+'</div><div class="hn">'+h.n+'</div><div class="hdd">'+h.d+'</div>'
+  +'<button class="hcta" data-a="tool" data-z="'+st.zone+'" data-t="'+h.n+'">'+(h.cta||'Open')+' &#8594;</button></div></div>';
+ var cards=z.tools.slice(1).map(function(p){return toolcard(st.zone,p);}).join('');
+ var sos=st.zone==='support'?sosbar():'';
+ return plate(st.zone)
+  +'<div class="zc wrap"><div class="zhead"><div class="zhn" style="color:'+TX(st.zone)+'"><span class="zti">'+ZI[st.zone]+'</span>'+z.l+' archway</div>'
+  +'<div class="zhr" style="background:'+z.c+'"></div><div class="zhd">'+z.title+'</div></div>'
+  +heroHtml+'<div class="tgrid">'+cards+'</div>'+sos+'</div>';
+}
+function sosbar(){
+ var z=Z.support;
+ return '<div class="sosbar" style="border-color:'+z.c+'"><h3>If you need help or someone to talk to</h3>'
+  +'<div class="sosbtns"><button style="background:'+z.c+';color:'+z.on+'" data-a="tool" data-z="support" data-t="Talk to someone">Talk to someone now</button>'
+  +'<button style="background:'+z.deep+';color:#fff" data-a="ext">Crisis helplines &#8599;</button></div>'
+  +'<div class="sosnote">Placeholder Note 1.6. The real destinations are Accessibility Services, Success Coaching and the wellbeing care form, confirmed by the client.</div></div>';
+}
+</script>
+
+<!-- =======================================================================
+     11  PLACEHOLDERAPP
+     The fifteen placeholder application bodies. NONE OF THIS IS FINAL.
+     Names, functionality, copy and images are all open and all belong to the owner.
+     Only the Focus timer actually works, and it is a real pomodoro.
+     In React each of these becomes its own component, dropped into the canvas slot.
+     ======================================================================= -->
+<script id="js-placeholderapp">
+function fmt(s){var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
+function bodyFor(p,z){
+ var c=Z[z].c,deep=Z[z].deep,tint=Z[z].tint,on=Z[z].on,tx=TX(z);
+ if(p.body==='breathing') return '<div class="pulse" style="background:'+c+'"></div>'
+   +'<div class="pt">Placeholder interactive. A paced visual guide that expands and contracts. The owner defines the pacing, the copy and the reduced motion fallback.</div>';
+ if(p.body==='sound'){
+   var names=['Rain','Ocean waves','Forest','Cafe hum'],shades=[tint,c,deep,c];
+   return '<div class="ssgrid">'+names.map(function(n,i){
+     return '<div class="sscard" style="background:'+shades[i]+'">'+I.playf+'<span class="sslab">'+n+'</span></div>';}).join('')+'</div>'
+    +'<div class="ssvol"><span style="color:var(--mut)">'+I.volume+'</span><span class="trk"><i style="background:'+c+'"></i><b></b></span><span class="tpg">Volume</span></div>'
+    +'<div class="pt">Placeholder interactive, based on the soundscape grid from Vinicius. High contrast, large targets, click and play, no menus.</div>';
+ }
+ if(p.body==='ground'){
+   var steps=[[5,'things you can see','Look around and name them'],[4,'things you can touch','Notice texture and temperature'],[3,'things you can hear','Near, then far away'],[2,'things you can smell','Or two you like the smell of'],[1,'thing you can taste','Or one good thing about today']];
+   return '<div class="gsteps">'+steps.map(function(s){
+     return '<div class="gstep"><span class="gn" style="background:'+c+'">'+s[0]+'</span><span><b>'+s[1]+'</b><small>'+s[2]+'</small></span></div>';}).join('')+'</div>'
+    +'<div class="gfocus" style="background:'+tint+';border:3px solid '+c+'"></div>'
+    +'<div class="pt">Placeholder interactive. The 5 4 3 2 1 technique, one step at a time, paired with a simple visual focus block.</div>';
+ }
+ if(p.body==='orb'||p.body==='game') return '<div class="gamebox" style="background:linear-gradient(160deg,'+tint+','+deep+')"><img src="'+A[p.img]+'" alt=""></div>'
+   +'<div class="pt">Placeholder interactive. The game canvas sits here and grows with this container when fullscreen is used. It never leaves the frame.</div>';
+ if(p.body==='timer') return '<div class="tmrlab" id="tmrlab">Focus</div><div class="tmr" id="tmr" style="color:'+tx+'">'+fmt(TM.sec)+'</div>'
+   +'<div class="segbtns">'+[['5 min',300],['15 min',900],['25 min',1500],['50 min',3000]].map(function(x){
+      var on=TM.len===x[1];
+      return '<button data-a="tlen" data-s="'+x[1]+'" style="'+(on?'border-color:'+c+';color:'+tx:'')+'">'+x[0]+'</button>';}).join('')+'</div>'
+   +'<div class="tpal"><button class="tpb pri" data-a="trun" style="background:'+c+';color:'+on+'">'+(TM.run?I.pause:I.play)+(TM.run?'Pause':'Start')+'</button>'
+   +'<button class="tpb" data-a="tres">'+I.reset+'Reset</button>'
+   +'<span class="tpg spacer">Working pomodoro. The rest of the tools are static placeholders.</span></div>'
+   +'<div class="pt">Placeholder interactive, and the one working example. Pick a length, start the clock, finish one thing.</div>';
+ if(p.body==='avatar') return '<div class="avrow"><div class="avdoll" style="background:'+(st.av?Z[st.av].tint:tint)+'"><img src="'+A[st.av?AV[st.av]:'ui-generic-placeholder-mark']+'" alt=""></div>'
+   +'<div class="avopts">'+order.map(function(k){
+      return '<i data-a="setav" data-k="'+k+'" style="background-color:'+Z[k].tint+';background-image:url('+A[AV[k]]+')'+(st.av===k?';border-color:var(--ink)':'')+'"></i>';}).join('')+'</div></div>'
+   +'<div class="pt">Placeholder interactive. Character art comes from Robin and Pat. The builder interface still needs one owner. Picking one here sets the avatar in your profile.</div>';
+ if(p.body==='jar') return '<img class="bimg" src="'+A[p.img]+'" alt="">'
+   +'<div class="pt">Placeholder interactive. Write the worry, drop it in, close the lid. Nothing is stored anywhere, C7.</div>';
+ if(p.body==='resources'){
+   var rows=[[I.acc,'Accessibility Services','Adjustments, plans and academic support'],
+     [I.users,'Success Coaching','One to one coaching for study and life load'],
+     [I.heart,'Wellbeing care form','Refer yourself, or someone you are worried about'],
+     [I.book,'Guides and readings','Short reads on sleep, focus, stress and burnout'],
+     [I.cal,'Workshops','What is running on campus and online this month']];
+   return '<div class="rslist">'+rows.map(function(r){
+     return '<div class="rsrow"><span class="rsi" style="background:'+c+';color:'+on+'">'+r[0]+'</span>'
+      +'<span><b>'+r[1]+'</b><small>'+r[2]+'</small></span><span class="rsa">'+I.chev+'</span></div>';}).join('')+'</div>'
+    +'<div class="pt">Placeholder content. The real service names and links come from the client, Note 1.6. This page is a list on purpose, not a grid, because lists read better than tiles inside a tool.</div>';
+ }
+ if(p.body==='talk') return '<div class="rslist">'
+   +'<div class="rsrow"><span class="rsi" style="background:'+c+';color:'+on+'">'+I.users+'</span><span><b>Talk to a peer</b><small>Someone else on campus, right now</small></span><span class="rsa">'+I.chev+'</span></div>'
+   +'<div class="rsrow"><span class="rsi" style="background:'+c+';color:'+on+'">'+I.cal+'</span><span><b>Book a real person</b><small>Success Coaching or Accessibility Services</small></span><span class="rsa">'+I.chev+'</span></div>'
+   +'<div class="rsrow" data-a="ext" style="border-color:'+deep+'"><span class="rsi" style="background:'+deep+';color:#fff">'+I.heart+'</span><span><b>Crisis helplines</b><small>A vetted line, opens off-site</small></span><span class="rsa">&#8599;</span></div>'
+   +'</div><div class="pt">Placeholder content. Destinations are not ours to choose, Note 1.6 and Note 1.7.</div>';
+ return '<img class="bimg" src="'+A[p.img]+'" alt="">'
+   +'<div class="pt">Placeholder interactive. '+p.n+' is built inside this container by its owner, to the style guide and the shared control language in the library below.</div>';
+}
+</script>
+
+<!-- =======================================================================
+     12  TOOL
+     The tool screen. Four parts, in this order, and the order is C9.
+       1  the primary placeholder container, which is the only part that survives
+       2  the disclaimer
+       3  the strict design constraints
+       4  the proposed component library
+     Parts 2, 3 and 4 are DEVELOPER SCAFFOLDING. They are deleted before deployment.
+     Fullscreen expands part 1 and nothing else. The chrome never moves, C1 and C3.
+     ======================================================================= -->
+<style id="css-tool">
+.subhead{display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap}
+.subhead h1{font-size:32px;font-weight:700;line-height:1.2}
+.zlabel{font-size:15px;color:var(--mut);margin-bottom:20px;letter-spacing:.3px;max-width:840px;line-height:1.6}
+.zlabel b{color:var(--ink);font-weight:600}
+
+/* primary placeholder content. this is the big one. */
+.canvas{position:relative;border:1.5px dashed var(--line2);border-radius:20px;background:var(--surface);padding:26px 30px;min-height:700px;display:flex;flex-direction:column;
+ transition:min-height .4s cubic-bezier(.4,0,.2,1),padding .3s,border-radius .3s}
+.cvhead{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.cvlab{font-size:13px;font-weight:600;letter-spacing:.4px;color:var(--mut);font-family:'Syne',sans-serif}
+.cvlab small{display:block;font-family:'Poppins',sans-serif;font-weight:400;font-size:11.5px;opacity:.75;letter-spacing:.2px;margin-top:1px}
+.cvfs{margin-left:auto;flex:none;border:2px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:999px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:9px;letter-spacing:.3px;transition:filter .2s}
+.cvfs:hover{filter:brightness(.96)}
+.cvfs svg{width:17px;height:17px}
+.cvbody{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:16px}
+.pt{color:var(--mut);font-size:14.5px;max-width:640px;line-height:1.7;letter-spacing:.3px}
+#app.toolfs .subhead,#app.toolfs .zlabel,#app.toolfs .belowfold{display:none}
+#app.toolfs .wrap{max-width:none;flex:1;display:flex;flex-direction:column;width:100%;min-height:0}
+#app.toolfs .main{padding:14px var(--pad) 126px;overflow:hidden;display:flex}
+#app.toolfs .canvas{flex:1;min-height:0;border-style:solid;border-width:1px}
+#app.toolfs .cvbody{justify-content:center}
+#app.toolfs .gamebox{max-width:1100px}
+
+/* the disclaimer, no colour sliver, sits below the canvas */
+.discl{display:flex;align-items:flex-start;gap:12px;border:1px solid var(--line2);border-radius:14px;padding:16px 18px;font-size:13.5px;color:var(--mut);line-height:1.65;letter-spacing:.3px;margin-top:16px;background:var(--surface)}
+.discl b{color:var(--ink);font-weight:700;display:block;font-size:15px;margin-bottom:3px}
+.discl svg{width:20px;height:20px;flex:none;margin-top:2px;color:var(--mut)}
+.sdc{border:1px solid var(--line2);border-radius:14px;padding:20px 22px;margin-top:16px;background:var(--surface)}
+.sdc h3{font-size:19px;font-weight:700;margin-bottom:6px;font-family:'Syne',sans-serif}
+.sdc .sdcs{font-size:13.5px;color:var(--mut);line-height:1.65;letter-spacing:.3px;margin-bottom:16px;max-width:860px}
+.sdc ol{list-style:none;display:flex;flex-direction:column;gap:11px;counter-reset:c}
+.sdc li{display:flex;gap:13px;align-items:flex-start;font-size:13.5px;color:var(--mut);line-height:1.6;letter-spacing:.3px}
+.sdc li b{color:var(--ink);font-weight:700;font-family:'Syne',sans-serif}
+.sdc li i{counter-increment:c;font-style:normal;flex:none;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12.5px;color:#fff}
+.sdc li i:before{content:counter(c)}
+
+/* placeholder app bodies */
+.pulse{width:150px;height:150px;border-radius:50%}
+@media(prefers-reduced-motion:no-preference){.pulse{animation:pl 4.2s ease-in-out infinite}}
+@keyframes pl{0%,100%{transform:scale(.66);opacity:.85}50%{transform:scale(1);opacity:1}}
+.bimg{max-width:210px;max-height:210px;object-fit:contain}
+.ssgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;max-width:700px}
+.sscard{border-radius:16px;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;position:relative}
+.sscard svg{width:52px;height:52px}
+.sscard .sslab{position:absolute;left:14px;bottom:12px;font-size:14px;font-weight:600;letter-spacing:.3px}
+.ssvol{display:flex;align-items:center;gap:12px;width:100%;max-width:700px}
+.gsteps{display:flex;flex-direction:column;gap:11px;width:100%;max-width:640px;text-align:left}
+.gstep{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:14px;padding:15px 16px;cursor:pointer;background:var(--bg)}
+.gstep .gn{width:38px;height:38px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:#fff}
+.gstep b{font-size:15px;font-weight:700;display:block}
+.gstep small{font-size:13px;color:var(--mut);letter-spacing:.3px}
+.gfocus{width:130px;height:130px;border-radius:28px}
+.tmr{font-size:96px;font-weight:800;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.tmrlab{font-size:13px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;font-family:'Syne',sans-serif;font-weight:700}
+.segbtns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+.segbtns button{border:2px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+.avrow{display:flex;gap:24px;align-items:center;flex-wrap:wrap;justify-content:center}
+.avdoll{width:190px;height:190px;border-radius:26px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.avdoll img{width:82%;height:82%;object-fit:contain}
+.avopts{display:grid;grid-template-columns:repeat(4,64px);gap:12px}
+.avopts i{width:64px;height:64px;border-radius:14px;display:block;border:2px solid transparent;cursor:pointer;background-size:78%;background-position:center;background-repeat:no-repeat}
+.rslist{display:flex;flex-direction:column;gap:12px;width:100%;max-width:760px;text-align:left}
+.rsrow{display:flex;align-items:center;gap:16px;border:2px solid var(--line2);border-radius:18px;padding:20px 22px;background:var(--bg);cursor:pointer}
+.rsrow .rsi{width:46px;height:46px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff}
+.rsrow .rsi svg{width:24px;height:24px}
+.rsrow b{font-size:17px;font-weight:700;display:block}
+.rsrow small{font-size:13.5px;color:var(--mut);letter-spacing:.3px;line-height:1.5}
+.rsrow .rsa{margin-left:auto;color:var(--mut);flex:none}
+.gamebox{width:100%;max-width:700px;aspect-ratio:16/9;border-radius:18px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.gamebox img{width:44%;height:auto;object-fit:contain;position:relative;z-index:2}
+@media(prefers-reduced-motion:no-preference){.gamebox img{animation:drift 6s ease-in-out infinite}}
+@keyframes drift{0%,100%{transform:translate(-70px,-26px)}50%{transform:translate(70px,26px)}}
+
+/* shared control language */
+.trk b{position:absolute;left:46%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;border-radius:50%;background:var(--surface);border:2.5px solid var(--ink);display:block}
+</style>
+<script id="js-tool">
+function tool(){
+ var z=Z[st.zone];var p=findTool(st.zone,st.tool)||{n:st.tool,d:'',tag:'Tool',owner:'Needs an owner',body:'generic',img:'ui-generic-placeholder-mark'};
+ var ctrl=p.ctrl?'<div class="tpal"><button class="tpb pri" style="background:'+z.c+';color:'+z.on+'">'+I.play+'Start</button>'
+   +'<button class="tpb">'+I.pause+'</button><button class="tpb">'+I.reset+'</button>'
+   +'<span class="tpg">'+I.volume+'</span><span class="trk"><i style="background:'+z.c+'"></i><b></b></span>'
+   +'<span class="tpg spacer">Shared control language, Note 1.10</span></div>':'';
+ return '<div class="wrap"><div class="subhead"><h1>'+p.n+'</h1></div>'
+  +'<div class="zlabel">'+p.d+'. <b>'+(p.ref?p.ref+'. ':'')+p.owner+'.</b></div>'
+  +'<div class="canvas"><div class="cvhead"><span class="cvlab">Primary placeholder content'
+  +'<small>This label is removed in the final design.</small></span>'
+  +'<button class="cvfs" data-a="fs" style="border-color:'+z.c+';color:'+TX(st.zone)+'">'+(st.fs?I.shrink:I.expand)+(st.fs?'Exit fullscreen':'Fullscreen')+'</button></div>'
+  +'<div class="cvbody">'+bodyFor(p,st.zone)+ctrl+'</div></div>'
+  +'<div class="belowfold">'
+  +'<div class="discl">'+I.warn+'<span><b>This is not the final design.</b>'
+  +'This disclaimer, and everything below it, is removed in the final design. It is a development reference for whoever takes ownership of this in-page element. '
+  +'Four categories are developed for, and only four: <b style="display:inline">Tool</b>, <b style="display:inline">Game</b>, <b style="display:inline">Media</b> and <b style="display:inline">Social</b>. '
+  +'Everything inside the container above is placeholder content. The app name, the functionality, the copy and the images are all open.</span></div>'
+  +sdc(st.zone)+lib(st.zone)+'</div></div>';
+}
+/* the rules, stated once per tool page, directly under the disclaimer */
+function sdc(z){
+ var c=Z[z].c;
+ var li=function(t,d){return '<li><i style="background:'+c+'"></i><span><b>'+t+'</b> '+d+'</span></li>';};
+ return '<div class="sdc"><h3>Strict design constraints</h3>'
+ +'<div class="sdcs">Everything on this page is a sample style of a component used to build this prototype. The constraints below are not samples. They are the parts that cannot move, because fifteen tools have to sit inside one shell.</div>'
+ +'<ol>'
+ +li('Build inside the central page zone.','The dashed container above is the whole of your space. It is what fullscreen expands, so anything built outside it will not expand, and anything that escapes it will break the chrome.')
+ +li('Aim to fill roughly 70 to 85 percent of the zone.','Under that and the page looks unfinished. Over it and there is nowhere for the eye to rest. Leave the container to hold the margin, do not add your own outer padding.')
+ +li('Justify to the centre of the zone, both axes.','It has to read correctly at page size and at fullscreen without a second layout. Centring is the cheapest way to get both for free. This applies to every app.')
+ +li('The top bar, the archway bar and the footer are not yours.','They are on every screen and they never move, fade or hide, C1. Fullscreen grows your container and nothing else.')
+ +li('One family of components, one control language.','Use the library below. If your tool has no playback or timing, do not add a control bar to it.')
+ +li('Nothing leaves the browser.','No accounts, no server, no personal data, C7.')
+ +'</ol></div>';
+}
+</script>
+
+<!-- =======================================================================
+     13  LIBRARY
+     Proposed component library. Developer scaffolding, deleted before deployment.
+     Examples only, nothing here is a requirement. It exists so fifteen people building
+     fifteen applications end up with a similar looking platform rather than fifteen
+     random designs. Componentry follows the Figma library from Huon, type and colour
+     follow the design system from Kristine.
+     ======================================================================= -->
+<style id="css-library">
+.lib{margin-top:16px;border:1px solid var(--line2);border-radius:20px;background:var(--surface);padding:26px 28px}
+.libh{font-size:22px;font-weight:700;line-height:1.25;margin-bottom:6px}
+.libsub{font-size:14px;color:var(--mut);line-height:1.65;letter-spacing:.3px;max-width:820px;margin-bottom:24px}
+.libgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:18px}
+.libcell{border:1px solid var(--line);border-radius:16px;padding:18px;background:var(--bg)}
+.libcell.wide{grid-column:1/-1}
+.libcell.half{grid-column:span 2}
+.libt{font-size:15px;font-weight:700;margin-bottom:5px}
+.libd{font-size:12.5px;color:var(--mut);line-height:1.55;margin-bottom:14px}
+.librow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn2{border:2px solid;background:none;border-radius:18px;padding:11px 22px;font-size:15px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif}
+.btn1{border:none;color:#fff;border-radius:18px;padding:13px 24px;font-size:15px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif}
+.btn3{border:none;background:none;font-size:15px;font-weight:500;cursor:pointer;padding:11px 6px;font-family:'Poppins',sans-serif}
+.icb{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:2px solid transparent}
+.icb svg{width:20px;height:20px}
+.libtog{width:64px;height:34px;border-radius:999px;position:relative;flex:none}
+.libtog i{position:absolute;top:3px;width:28px;height:28px;border-radius:50%;background:#fff;display:block}
+.libcb{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff}
+.libcb svg{width:16px;height:16px}
+.switcher{display:flex;border:1px solid var(--line2);border-radius:12px;overflow:hidden}
+.switcher span{flex:1;text-align:center;padding:10px 8px;font-size:13px;font-weight:500;cursor:pointer;color:var(--mut);border-right:1px solid var(--line2)}
+.switcher span:last-child{border-right:none}
+.switcher span.on{color:#fff}
+.hcardex{display:flex;align-items:center;gap:16px;border:2px solid var(--line2);border-radius:18px;padding:16px;background:var(--surface)}
+.hcardex .hi2{width:44px;height:44px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff}
+.hcardex .hi2 svg{width:22px;height:22px}
+.hcardex b{font-size:16px;display:block}
+.hcardex small{font-size:12.5px;color:var(--mut)}
+.iconwall{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:10px}
+.iconwall span{display:flex;align-items:center;justify-content:center;height:38px}
+.iconwall svg{width:22px;height:22px}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches i{width:44px;height:44px;border-radius:8px;display:block}
+.typerow{display:flex;flex-direction:column;gap:6px}
+.typerow span{font-family:'Syne',sans-serif;font-weight:700;line-height:1.15}
+/* placeholder media blocks, now library examples */
+.pslot{border-radius:14px;background:var(--surface);border:1.5px dashed var(--line2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--mut);font-size:13px;letter-spacing:.3px;text-align:center;padding:12px;overflow:hidden;position:relative}
+.pslot img{width:74px;height:74px;object-fit:contain;opacity:.8}
+.pslot.hero{aspect-ratio:21/8}
+.pslot.large{aspect-ratio:16/9}
+.pslot.small{aspect-ratio:4/3}
+.pcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.pmini{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.pmini .pim{aspect-ratio:16/10;display:flex;align-items:center;justify-content:center}
+.pmini .pim img{width:56px;height:56px;object-fit:contain}
+.pmini .pmb{padding:13px 15px}
+.pmini .pmb b{font-size:15px;display:block;margin-bottom:3px}
+.pmini .pmb small{font-size:12.5px;color:var(--mut);line-height:1.45}
+/* short form vertical video cards */
+.ytrow{display:flex;gap:14px;overflow:auto;padding-bottom:4px}
+.ytcard{flex:none;width:132px;aspect-ratio:9/16;border-radius:14px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ytcard .ytp{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.9);display:flex;align-items:center;justify-content:center;color:#2B2828;z-index:3}
+.ytcard .ytg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 45%,rgba(0,0,0,.85) 100%);z-index:2}
+.ytcard .ytt{position:absolute;left:10px;right:10px;bottom:10px;z-index:3;font-family:'Syne',sans-serif;font-size:12.5px;font-weight:700;color:#fff;line-height:1.3}
+/* featured card with video */
+.featex{position:relative;border-radius:18px;overflow:hidden;height:190px;display:flex;align-items:center}
+.featex .fvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) brightness(1.1);opacity:.55}
+.featex .fg{position:absolute;inset:0;z-index:2}
+.featex .fc{position:relative;z-index:3;padding:0 24px;max-width:70%}
+.featex .fc b{font-family:'Syne',sans-serif;font-size:22px;color:#fff;display:block}
+.featex .fc small{font-size:13px;color:rgba(255,255,255,.85);display:block;margin-top:4px}
+.featex .fc button{margin-top:12px;border:none;border-radius:999px;padding:10px 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.pinstr{display:flex;flex-direction:column;gap:10px}
+.pinstr div{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--mut);line-height:1.6;letter-spacing:.3px}
+.pinstr i{width:24px;height:24px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;font-style:normal;font-family:'Syne',sans-serif}
+</style>
+<script id="js-library">
+function lib(z){
+ var c=Z[z].c,deep=Z[z].deep,tint=Z[z].tint,on=Z[z].on,tx=TX(z);
+ var cell=function(t,d,inner,cls){return '<div class="libcell'+(cls?' '+cls:'')+'"><div class="libt">'+t+'</div><div class="libd">'+d+'</div>'+inner+'</div>';};
+ var icons=['home','search','help','user','gear','back','chev','play','sun','moon','acc','tone','motion','sliders','type','focusring','skip','keys','heart','grid','bar','route','expand','spark','pause','reset','volume','image','book','cal','warn','check','plus','minus','close','leaf','users','bolt','wave','menu','lock','info','mail'];
+ var mark='<img src="'+A['ui-generic-placeholder-mark']+'" alt="">';
+ return '<div class="lib">'
+ +'<div class="libh">Proposed component library</div>'
+ +'<div class="libsub">Examples of elements you can incorporate into the primary content. Nothing in it is a requirement. It is there so that fifteen people building fifteen different tools end up with a similar looking platform rather than fifteen random designs. '
+ +'No, not every single tool permutation is accounted for, but you can get a general gist of how things should look while developing yours. '
+ +'Syne for headings and Poppins for body, per Kristine. Componentry follows the Figma library from Huon. The soundscape grid comes from Vinicius. Colour is the '+Z[z].l+' archway set, because archway colour is the wayfinding system.</div>'
+ +'<div class="libgrid">'
+ +cell('Buttons','Primary, secondary, tertiary. One primary per view.',
+   '<div class="librow"><button class="btn1" style="background:'+c+';color:'+on+'">Button</button><button class="btn2" style="border-color:'+c+';color:'+tx+'">Button</button><button class="btn3" style="color:'+tx+'">Button</button></div>')
+ +cell('Icon buttons','For actions the user can take anywhere in the UI.',
+   '<div class="librow"><span class="icb" style="background:'+c+';color:'+on+'">'+I.search+'</span><span class="icb" style="border-color:'+c+';color:'+tx+'">'+I.search+'</span><span class="icb" style="color:'+tx+'">'+I.search+'</span></div>')
+ +cell('Tags','Game, Tool, Media, Social. These live on cards only, never on a page heading.',
+   '<div class="librow"><span class="tag" style="background:'+c+';color:'+on+'">Game</span><span class="tag" style="background:'+tint+';color:'+deep+'">Tool</span><span class="tag" style="background:var(--line);color:var(--ink)">Media</span><span class="tag" style="background:var(--line);color:var(--ink)">Social</span></div>')
+ +cell('Toggle and checkbox','Toggle for on and off. Checkbox for many from a set.',
+   '<div class="librow"><span class="libtog" style="background:'+c+'"><i style="right:3px"></i></span><span class="libtog" style="background:var(--line2)"><i style="left:3px"></i></span><span class="libcb" style="background:'+c+';color:'+on+'">'+I.check+'</span></div>')
+ +cell('Content switcher','Two or more sections in one place. Sits above the content it changes.',
+   '<div class="switcher"><span class="on" style="background:'+c+';color:'+on+'">Section 1</span><span>Section 2</span><span>Section 3</span></div>')
+ +cell('Slider','A value from a range. Avoid when the range is too large.',
+   '<div class="librow"><span class="trk" style="flex:1"><i style="background:'+c+'"></i><b></b></span></div>')
+ +cell('Control bar','The shared control language, Note 1.10. Use it when the tool actually has playback or timing. Do not add it to a tool that has nothing to control.',
+   '<div class="tpal" style="max-width:none"><button class="tpb pri" style="background:'+c+';color:'+on+'">'+I.play+'Start</button>'
+   +'<button class="tpb">'+I.pause+'</button><button class="tpb">'+I.reset+'</button>'
+   +'<span class="tpg">'+I.volume+'</span><span class="trk"><i style="background:'+c+'"></i><b></b></span></div>','half')
+ +cell('Placeholder hero video','Matches the shape of the homepage promotional video, 21 by 8. Use it once per page at most.',
+   '<div class="pslot hero">'+mark+'<span>Placeholder hero video</span></div>','half')
+ +cell('Placeholder large video','16 by 9. For a demo or a walkthrough inside a tool.',
+   '<div class="pslot large">'+mark+'<span>Placeholder large video</span></div>')
+ +cell('Placeholder small media','4 by 3. For a thumbnail or an inline still.',
+   '<div class="pslot small">'+mark+'<span>Placeholder small media</span></div>')
+ +cell('Featured card with video','A wide card with a muted background clip behind the text. Same shape as the archway hero.',
+   '<div class="featex"><video class="fvid" autoplay muted loop playsinline data-src="'+z+'"></video>'
+   +'<div class="fg" style="background:linear-gradient(90deg,'+deep+' 12%,rgba(0,0,0,.3) 62%,transparent)"></div>'
+   +'<div class="fc"><b>Featured title</b><small>One line of supporting copy sits here.</small>'
+   +'<button style="background:#fff;color:#2B2828">Open &#8594;</button></div></div>','half')
+ +cell('YT short style cards','Vertical 9 by 16 cards in a horizontal scroller. For short clips and guided snippets.',
+   '<div class="ytrow">'+[['Two minute reset',tint,deep],['Breathing basics',c,deep],['Study sprint',deep,c],['Five senses',tint,c],['Wind down',c,tint]].map(function(x){
+      return '<div class="ytcard" style="background:linear-gradient(170deg,'+x[1]+','+x[2]+')"><span class="ytp">'+I.playf+'</span><div class="ytg"></div><div class="ytt">'+x[0]+'</div></div>';}).join('')+'</div>','half')
+ +cell('Horizontal card','Icon, text, and one optional control on the right.',
+   '<div class="hcardex"><span class="hi2" style="background:'+c+';color:'+on+'">'+I.heart+'</span><span><b>Title</b><small>Lorem ipsum is simply dummy text.</small></span><span class="libtog" style="background:'+c+';margin-left:auto"><i style="right:3px"></i></span></div>')
+ +cell('Vertical card','Image or icon, title, body, one action.',
+   '<div class="pcards"><div class="pmini"><div class="pim" style="background:'+tint+'">'+mark+'</div><div class="pmb"><b>Title</b><small>Lorem ipsum is simply dummy text of the printing industry.</small></div></div>'
+   +'<div class="pmini"><div class="pim" style="background:'+tint+'">'+mark+'</div><div class="pmb"><b>Title</b><small>Lorem ipsum is simply dummy text of the printing industry.</small></div></div></div>')
+ +cell('Empty state','When there is nothing to show yet. Say what would appear, not just that it is empty.',
+   '<div class="pslot small"><img src="'+A['ui-empty-state']+'" alt=""><span>Nothing here yet</span></div>')
+ +cell('Reduced motion','Every animated element needs a still fallback. Right now only the archway background honours the setting.',
+   '<div class="pslot small"><img src="'+A['ui-reduced-motion-mark']+'" alt=""><span>Still fallback required</span></div>')
+ +cell('List rows','Inside a tool, a plain list reads better than a grid of tiles.',
+   '<div class="pinstr">'+['Rain, ocean waves, forest','Five senses, one step at a time','Book a real person','Guides and readings']
+     .map(function(t,i){return '<div><i style="background:'+c+';color:'+on+'">'+(i+1)+'</i><span>'+t+'</span></div>';}).join('')+'</div>')
+ +cell('Icons','24px, 1.8 stroke, outline, rounded caps. One family, no exceptions.',
+   '<div class="iconwall" style="color:'+tx+'">'+icons.map(function(k){return '<span>'+I[k]+'</span>';}).join('')+'</div>','half')
+ +cell('Colour','The '+Z[z].l+' set. Fill, text and on values, because two of the four archway colours vanish as small text.',
+   '<div class="swatches">'+[deep,c,tint].map(function(x){return '<i style="background:'+x+'"></i>';}).join('')
+   +'<i style="background:var(--line2)"></i><i style="background:var(--bg);border:1px solid var(--line2)"></i></div>')
+ +cell('Type scale','Syne for headings, Poppins for body.',
+   '<div class="typerow"><span style="font-size:30px">H2 Syne 48/58</span><span style="font-size:22px">H4 Syne 32/38.5</span>'
+   +'<span style="font-family:Poppins;font-weight:500;font-size:16px">Body regular, Poppins 20/28</span>'
+   +'<span style="font-family:Poppins;font-weight:500;font-size:13px;color:var(--mut)">Caption, Poppins 16/22.5</span></div>')
+ +'</div></div>';
+}
+</script>
+
+<!-- =======================================================================
+     14  OVERLAY
+     Every overlay, sharing one shell. Nothing here is ever a page, C2.
+     Menu, search, help, settings, accessibility, profile, feeling, about and contact
+     all carry the avatar column on the right. Legal and interstitial screens do not.
+     PARENT defines the back path, so no overlay ever dead ends.
+     ======================================================================= -->
+<style id="css-overlay">
+.ovl{position:absolute;inset:0;background:rgba(28,26,26,.55);display:flex;align-items:center;justify-content:center;padding:26px;z-index:30}
+.sheet{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 26px 26px;width:100%;max-width:520px;position:relative;max-height:88%;overflow:auto}
+.sheet.wide{max-width:840px}
+.sheethead{display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-right:44px}
+.sheethead h2{font-size:24px;font-weight:700;line-height:1.22}
+.sheethead .shsub{font-size:13.5px;color:var(--mut);font-family:'Poppins',sans-serif;font-weight:400;display:block;margin-top:2px}
+.sheet .x{position:absolute;top:15px;right:15px}
+.sheet .bk{width:32px;height:32px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.sheet .bk svg{width:16px;height:16px}
+.sheet p{font-size:15px;color:var(--mut);line-height:1.6;margin-bottom:12px;letter-spacing:.3px}
+/* two column profile */
+.pf2{display:grid;grid-template-columns:1fr 250px;gap:26px;align-items:start}
+/* the left column. one grid child, always, so nothing spills into the avatar column */
+.pfmain{min-width:0}
+.pfmain .grp:first-child{margin-top:0}
+.pfside{position:sticky;top:0}
+.pfside{border-left:1px solid var(--line);padding-left:24px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;align-self:start}
+.pfav{width:186px;height:186px;border-radius:22px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;border:2px solid var(--line2)}
+.pfav img{width:82%;height:82%;object-fit:contain}
+.pfname{font-size:21px;font-weight:700}
+.pfhint{font-size:12.5px;color:var(--mut);line-height:1.5}
+.pfbtn{border:none;border-radius:999px;padding:11px 20px;font-family:'Syne',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;color:#fff}
+.searchin{display:flex;align-items:center;gap:9px;border:1px solid var(--line2);border-radius:999px;padding:12px 18px;margin:15px 0;color:var(--mut);font-size:16px}.searchin svg{width:19px;height:19px}
+.reslist{display:flex;flex-direction:column;gap:10px}
+.resrow{display:flex;align-items:center;gap:14px;border:1px solid var(--line);border-radius:12px;padding:13px 16px;cursor:pointer;font-size:16px;font-weight:500;letter-spacing:.2px}
+.resrow:hover{border-color:var(--line2)}
+.resrow .ri{width:21px;height:21px;color:var(--mut);flex:none}.resrow .ri svg{width:21px;height:21px}
+.resrow .rl{display:flex;flex-direction:column;gap:2px;min-width:0}
+.resrow .rl small{font-size:13px;color:var(--mut);font-weight:400;letter-spacing:.3px}
+.resrow .z{font-size:14px;font-weight:600;color:var(--mut);flex:none;margin-left:auto}
+.field{border:1px solid var(--line2);border-radius:11px;padding:13px 15px;font-size:16px;color:var(--mut);margin-bottom:12px}
+.grp{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--mut);margin:18px 0 10px;letter-spacing:.6px}
+.tog{width:42px;height:24px;border-radius:999px;background:var(--line2);position:relative;flex:none;margin-left:auto}
+.tog i{position:absolute;top:2.5px;left:2.5px;width:19px;height:19px;border-radius:50%;background:#fff;display:block;transition:left .18s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tog.on i{left:20.5px}
+.seg{display:flex;gap:6px;flex:none;margin-left:auto}
+.seg span{font-size:13px;font-weight:500;color:var(--mut);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer}
+.seg span.on{color:var(--ink);border-color:var(--ink);font-weight:600}
+.legal{font-size:14.5px;color:var(--mut);line-height:1.75;letter-spacing:.3px}
+.legal b{font-family:'Syne',sans-serif;color:var(--ink);display:block;margin:16px 0 5px;font-size:16px;font-weight:700}
+.note{font-size:13px;color:var(--mut);line-height:1.65;margin-top:18px;letter-spacing:.3px}
+.slwrap{margin:10px 0 4px}
+.slfaces{display:flex;justify-content:space-between;margin-bottom:11px}
+.slfaces button{border:none;background:none;cursor:pointer;padding:4px;color:var(--line2)}
+.slfaces button svg{width:30px;height:30px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:999px;background:var(--line);outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:23px;height:23px;border-radius:50%;background:var(--surface);border:2.5px solid var(--ink);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:23px;height:23px;border-radius:50%;background:var(--surface);border:2.5px solid var(--ink);cursor:pointer}
+.slends{display:flex;justify-content:space-between;margin-top:10px;font-size:13px;color:var(--mut);font-weight:500;letter-spacing:.4px}
+.statecard{border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-top:18px;display:flex;gap:13px;align-items:flex-start}
+.statecard svg{width:32px;height:32px;flex:none}
+.statecard .sn{font-family:'Syne',sans-serif;font-size:17px;font-weight:700}
+.statecard .sd{font-size:14px;color:var(--mut);margin-top:4px;line-height:1.55;letter-spacing:.3px}
+
+.intro{position:absolute;inset:0;background:#FFFFFF;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px;z-index:40;padding:24px;text-align:center;overflow:hidden;transition:opacity .9s ease}
+.intro.fade{opacity:0}
+.intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(.7) brightness(1.28);opacity:.22;z-index:0}
+.intro .iscrim{position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 58% 62% at 50% 48%,#fff 32%,rgba(255,255,255,.55) 68%,rgba(255,255,255,.85) 100%)}
+.intro .ic2{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:24px}
+.intro img.tlogo{width:min(420px,68vw);height:auto;display:block}
+.intro h1{font-size:44px;font-weight:800;line-height:1.2;color:#4A4545;letter-spacing:-.5px}
+@media(prefers-reduced-motion:no-preference){.intro img.tlogo{animation:rise 1.1s ease both}.intro h1{animation:rise 1.1s .35s ease both}}
+@keyframes rise{from{transform:translateY(16px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;justify-content:center}
+</style>
+<script id="js-overlay">
+/* back path for every overlay. nothing dead ends, C2. */
+const PARENT={menu:null,settings:'menu',feeling:'settings',access:'settings',help:'menu',search:'menu',
+              account:'menu',about:'menu',contact:'menu',privacy:'menu',terms:'menu'};
+function row(icon,label,sub,right,attrs){
+ return '<div class="resrow" '+(attrs||'')+'><span class="ri">'+icon+'</span><span class="rl">'+label+(sub?'<small>'+sub+'</small>':'')+'</span>'+(right||'')+'</div>';
+}
+/* The avatar column. Shared by every menu overlay, not just Profile, so the
+   avatar is reachable from anywhere the user opens the chrome.
+   TO DO for dev: this must actually persist and actually link. See handoff. */
+function avatarPanel(){
+ var img=st.av?A[AV[st.av]]:A['ui-generic-placeholder-mark'];
+ return '<div class="pfside">'
+  +'<div class="pfav" style="background:'+(st.av?Z[st.av].tint:'var(--bg)')+'" data-a="tool" data-z="social" data-t="Avatar creator"><img src="'+img+'" alt=""></div>'
+  +'<div class="pfname">Hi {User}</div>'
+  +(st.av?'<div class="pfhint">Your '+Z[st.av].l+' character is set. Tap it to change.</div>'
+        :'<div class="pfhint">No avatar chosen yet. Tap the image to open the avatar creator.</div>')
+  +'<button class="pfbtn" style="background:'+(st.av?Z[st.av].c:'var(--ink)')+(st.av&&st.av==='support'?';color:#241D00':'')+'" data-a="tool" data-z="social" data-t="Avatar creator">'
+  +(st.av?'Change avatar':'Choose an avatar')+'</button></div>';
+}
+/* which overlays carry the avatar column. legal and interstitial screens do not. */
+const TWOCOL={menu:1,search:1,help:1,account:1,settings:1,access:1,feeling:1,about:1,contact:1};
+function tog(on){return '<span class="tog'+(on?' on':'')+'" style="'+(on?'background:var(--ink)':'')+'"><i></i></span>';}
+function seg(items,cur,act,key){
+ return '<span class="seg">'+items.map(function(x){
+   return '<span class="'+(cur===x[1]?'on':'')+'" data-a="'+act+'" data-'+key+'="'+x[1]+'">'+x[0]+'</span>';}).join('')+'</span>';
+}
+function overlay(){
+ if(!st.ov) return '';
+ var h='',title='',sub='',v=st.ov,b=B(),wide='';
+ if(v==='menu'){title='Menu';sub='Everything in the space, in one place.';
+   h='<div class="reslist">'
+    +row(I.search,'Search','Every tool, by name or by archway','<span class="z">&#8250;</span>','data-a="ov" data-v="search"')
+    +row(I.help,'Help and how to','Finding your way around','<span class="z">&#8250;</span>','data-a="ov" data-v="help"')
+    +row(I.gear,'Settings','Accessibility, appearance, motion','<span class="z">&#8250;</span>','data-a="ov" data-v="settings"')
+    +row(I.user,'Profile','Your avatar and your details','<span class="z">&#8250;</span>','data-a="ov" data-v="account"')
+    +row(I.spark,'How you feel','We recommend where to go, based on it','<span class="z">&#8250;</span>','data-a="ov" data-v="feeling"')
+    +row(I.info,'About the space','What this is, and what it is not','<span class="z">&#8250;</span>','data-a="ov" data-v="about"')
+    +row(I.mail,'Contact us and feedback','Tell us what is not working','<span class="z">&#8250;</span>','data-a="ov" data-v="contact"')
+    +'<div class="resrow" data-a="ext" style="border-color:#8C7400"><span class="ri" style="color:#8C7400">'+I.heart+'</span><span class="rl"><b>Get support now</b><small>A vetted crisis line, opens off-site</small></span><span class="z" style="color:#8C7400">Helplines &#8599;</span></div>'
+    +'</div>';
+ }
+ else if(v==='search'){
+   title='Search';sub='Search is not wired up. It lists the four archways so the route is still there.';
+   h='<div class="searchin">'+I.search+' Search the space</div><div class="reslist">'
+    +order.map(function(z){
+      return '<div class="resrow" data-a="zone" data-z="'+z+'"><span class="ri" style="color:'+TX(z)+'">'+ZI[z]+'</span>'
+       +'<span class="rl">'+Z[z].l+' archway<small>'+Z[z].tools.length+' applications</small></span>'
+       +'<span class="z" style="color:'+TX(z)+'">Open</span></div>';}).join('')+'</div>';
+ }
+ else if(v==='help'){title='Finding your way';sub='Help for using the space. This is not crisis support.';
+   h='<div class="reslist">'
+    +row(I.route,'Four ways to reach any tool','Cards, bottom bar, search, or how you feel','')
+    +row(I.bar,'The bars never move','Top bar, bottom bar and footer are on every screen','')
+    +row(I.expand,'Fullscreen belongs to the tool','The control sits inside the tool container, and only that container grows','')
+    +row(I.heart,'For crisis support','Use get support now, in the menu or your profile','')
+    +'</div>';
+ }
+ else if(v==='account'){title='Profile';wide=' wide';
+   var left='<div class="reslist">'
+    +row(I.user,'Update personal details','Name and how you are addressed','<span class="z">&#8250;</span>')
+    +row(I.image,'Select avatar','Pick a character, or upload your own image','<span class="z">&#8250;</span>','data-a="tool" data-z="social" data-t="Avatar creator"')
+    +row(I.acc,'Privacy settings','What stays in this browser','<span class="z">&#8250;</span>','data-a="ov" data-v="privacy"')
+    +row(I.tone,'Appearance and themes','Light, dark and tone','<span class="z">&#8250;</span>','data-a="ov" data-v="settings"')
+    +'</div>';
+   h=left;
+ }
+ else if(v==='settings'){title='Settings';
+   h='<div class="grp">Accessibility</div><div class="reslist">'
+    +row(I.acc,'Accessibility','Text size, focus, keyboard','<span class="z">&#8250;</span>','data-a="ov" data-v="access"')
+    +row(I.motion,'Reduced motion','Stops animation, and pauses the archway background',tog(st.rm),'data-a="rm"')
+    +'</div>'
+    +'<div class="grp">Appearance and themes</div><div class="reslist">'
+    +row((st.dark?I.moon:I.sun),'Light or dark','Also on the top bar',seg([['Light','light'],['Dark','dark']],st.dark?'dark':'light','setdark','d'),'')
+    +row(I.tone,'Tone','Selectable palette on top of light and dark, Note 1.3',seg([['Default','default'],['Warm','warm'],['Cool','cool']],st.tone,'settone','t'),'')
+    +'</div>'
+    +'<div class="grp">More</div><div class="reslist">'
+    +row(I.spark,'How you feel','We recommend where to go, based on it','<span class="z">&#8250;</span>','data-a="ov" data-v="feeling"')
+    +'</div>';
+ }
+ else if(v==='access'){title='Accessibility';
+   h='<div class="reslist">'
+    +row(I.type,'Text size','Not wired up yet. See the developer to-do list',seg([['A','1'],['A','2'],['A','3']],String(st.ts),'setts','s'),'')
+    +row(I.motion,'Reduced motion','Stops animation, and pauses the archway background',tog(st.rm),'data-a="rm"')
+    +row(I.focusring,'Visible focus ring','Always show where the keyboard is',tog(true))
+    +row(I.skip,'Skip to content','First stop for keyboard and screen reader',tog(true))
+    +row(I.keys,'Keyboard shortcuts','The full list','<span class="z">&#8250;</span>')
+    +row(I.search,'Search','Not wired up. Lists the four archways only','<span class="z">&#8250;</span>','data-a="ov" data-v="search"')
+    +'</div>';
+ }
+ else if(v==='feeling'){title='How are you feeling';
+   h='<p>We will recommend you where to go, depending on how you feel.</p>'
+    +'<div class="slwrap"><div class="slfaces">'+S.map(function(s,i){
+      return '<button data-a="feel" data-i="'+i+'" style="color:'+(s.c||'var(--ink)')+';opacity:'+(i===st.feel?'1':'.4')+'">'+s.face+'</button>';}).join('')+'</div>'
+    +'<input type="range" min="0" max="4" step="1" value="'+st.feel+'" id="sl">'
+    +'<div class="slends"><span>Negative</span><span>Positive</span></div></div>'
+    +'<div class="statecard" style="border-color:'+(b.c||'var(--line)')+'"><span style="color:'+(b.c||'var(--ink)')+'">'+b.face+'</span>'
+    +'<div><div class="sn" style="color:'+(SC(b)||'var(--ink)')+'">'+b.l+'</div><div class="sd">'+b.d+'</div>'
+    +(b.z?'<div class="sd">We recommend <b>'+b.t+'</b> in <b>'+Z[b.z].l+'</b>.</div>':'<div class="sd">No archway is recommended.</div>')+'</div></div>';
+ }
+ else if(v==='about'){title='About the space';
+   h='<p>A browser based sensory space for Torrens students. Somewhere to reset for a few minutes between study sessions, then get on with your day.</p>'
+    +'<p>Four archways, one dashboard, and more than one way to reach anything in it.</p>'
+    +'<p>Nothing you do here is stored anywhere. No account, no server, no tracking. Your appearance choices stay in this browser and nowhere else.</p>'
+    +'<div class="note">Made by T2, WIL302B. Interactive prototype v9.0. Conforms to Information Architecture map v9.0. Not a final visual design.</div>';
+ }
+ else if(v==='contact'){title='Contact us and feedback';
+   h='<div class="field">Your name</div><div class="field">Your message</div><button class="btn" data-a="close">Send</button>';
+ }
+ else if(v==='privacy'){title='Privacy';
+   h='<div class="legal">Placeholder legal copy. Real wording comes from the client.'
+    +'<b>What we collect</b>Nothing personal. No account, no server, no tracking.'
+    +'<b>What stays on your device</b>Your appearance choices, and only in this browser.'
+    +'<b>Leaving the space</b>Helplines opens an external site with its own policy.</div>';
+ }
+ else if(v==='terms'){title='Terms';
+   h='<div class="legal">Placeholder legal copy. Real wording comes from the client.'
+    +'<b>What this is</b>A wellbeing and sensory reset tool. It is not a medical service and not a substitute for one.'
+    +'<b>In an emergency</b>Use get support now, or contact emergency services.'
+    +'<b>Fair use</b>Be decent to other people in shared spaces.</div>';
+ }
+ else if(v==='ext'){title='Leaving the space &#8599;';
+   h='<p>Helplines opens a vetted crisis support site in a new tab. You are leaving the sensory space.</p><div class="toolbar" style="justify-content:flex-start"><button class="btn" data-a="close">Stay here</button><button class="btn" data-a="close" style="border-color:#8C7400;color:#8C7400">Continue</button></div>';
+ }
+ else if(v==='toolinfo'){title='Tool status';
+   h='<p>This tool is not finalised. What you see is placeholder content. The owner builds the real thing inside the same container, to the style guide and the shared control language, and the library at the bottom of each tool page is the reference.</p><button class="btn" data-a="close">Got it</button>';
+ }
+ /* the left column is ALWAYS one grid child. without this wrapper, an overlay
+    with several top level blocks (settings, search, feeling, about) spills its
+    blocks alternately into the avatar column. */
+ if(TWOCOL[v]){ h='<div class="pf2"><div class="pfmain">'+h+'</div>'+avatarPanel()+'</div>'; wide=' wide'; }
+ var par=PARENT[v];
+ var bk=par?'<button class="bk" data-a="ov" data-v="'+par+'" title="Back">'+I.arrow+'</button>':'';
+ return '<div class="ovl" data-a="close"><div class="sheet'+wide+'" data-stop="1"><button class="ic x" data-a="close">&#10005;</button>'
+  +'<div class="sheethead">'+bk+'<h2>'+title+(sub?'<span class="shsub">'+sub+'</span>':'')+'</h2></div>'+h+'</div></div>';
+}
+</script>
+
+<!-- =======================================================================
+     15  BOOTSTRAP
+     The render loop, the timer, and one delegated click handler for the whole app.
+     data-a is the action, everything else is a parameter. In React this becomes props
+     and callbacks, and render() becomes the reconciler doing its job.
+     ======================================================================= -->
+<style id="css-bootstrap">
+@media(max-width:1100px){
+ #app{--pad:20px}
+ .zcards{grid-template-columns:repeat(2,1fr)}
+ .zcard{aspect-ratio:4/3}
+ .hfeel{display:none}
+ .pf2{grid-template-columns:1fr}
+ .pfside{border-left:none;border-top:1px solid var(--line);padding:20px 0 0}
+ .libcell.half{grid-column:1/-1}
+}
+@media(max-width:820px){
+ h1.big,.subhead h1{font-size:26px}
+ .zhn{font-size:24px}
+ .herotool{height:250px}
+ .herotool .hn{font-size:26px}
+ .herotool .hill{display:none}
+ .herotool .hc{max-width:none}
+ .hero{aspect-ratio:16/9}
+ .crumb{font-size:14px}
+ .main{padding-bottom:168px}
+ .bubwrap{bottom:124px}
+ .canvas{padding:20px 18px;min-height:560px}
+ .tmr{font-size:64px}
+}
+@media(max-width:640px){
+ #app{--pad:14px}
+ .top{padding:11px var(--pad)}
+ .ic{width:33px;height:33px}
+ .feelchip span:last-child{display:none}
+ .zcards{grid-template-columns:1fr 1fr;gap:11px}
+ .tgrid{grid-template-columns:1fr 1fr;gap:12px}
+ .face{flex:1 1 90px;padding:12px 6px 10px}
+ .face svg{width:28px;height:28px}
+ .face .fl{font-size:12px}
+ .feelcard{padding:17px 16px}
+ .feelcard .ft{font-size:19px}
+ .pill button{padding:0 12px;font-size:13px;height:44px}
+ .footbar .fg:first-child a:nth-child(2){display:none}
+ .sheet{padding:20px 18px 22px}
+ .bub{flex-wrap:wrap;padding:13px;gap:10px}
+ .bubtx{font-size:13.5px}
+ .ssgrid{grid-template-columns:1fr}
+ .lib{padding:20px 16px}
+ .canvas{min-height:520px}
+}
+</style>
+<script id="js-bootstrap">
+function tick(){
+ if(TM.sec>0)TM.sec--;
+ else {TM.run=false;clearInterval(TM.iv);TM.iv=null;}
+ var el=document.getElementById('tmr');
+ if(el)el.textContent=fmt(TM.sec);
+ else {clearInterval(TM.iv);TM.iv=null;TM.run=false;}
+}
+function timerRun(){
+ TM.run=!TM.run;
+ if(TM.run){ if(TM.sec===0)TM.sec=TM.len; if(!TM.iv)TM.iv=setInterval(tick,1000); }
+ else { clearInterval(TM.iv);TM.iv=null; }
+}
+
+function armBubble(){
+ var w=document.getElementById('bubwrap'),pb=document.getElementById('pillbar'),bu=document.getElementById('bub');
+ if(!w||!pb||!bu)return;
+ bu.style.maxWidth=Math.max(300,Math.round(pb.getBoundingClientRect().width))+'px';
+ if(bubT)clearTimeout(bubT);
+ bubT=setTimeout(function(){
+   var el=document.getElementById('bub');
+   if(el){el.classList.add('out');setTimeout(function(){st.rec=false;render();},300);}
+   else {st.rec=false;}
+ },6000);
+}
+function render(){
+ if(st.screen==='intro'){
+  app.innerHTML='<div class="intro" id="intro"><video data-src="calm" autoplay muted loop playsinline></video><div class="iscrim"></div>'
+   +'<div class="ic2"><img class="tlogo" src="'+LOGO+'" alt="Torrens University Australia"><h1>Sensory Space</h1></div></div>';
+  document.querySelectorAll('video[data-src]').forEach(function(v){
+   var pair=VIDS.calm; v.innerHTML='<source src="'+pair[0]+'" type="video/webm"><source src="'+pair[1]+'" type="video/mp4">'; v.load();
+   var pr=v.play(); if(pr&&pr.catch)pr.catch(function(){});
+  });
+  setTimeout(function(){
+   var el=document.getElementById('intro');
+   if(el)el.classList.add('fade');
+   setTimeout(function(){ st.screen='home'; render(); },900);
+  },3000);
+  return;
+ }
+ var b= st.screen==='home'?home():st.screen==='zone'?zone():tool();
+ app.innerHTML=topbar()+'<div class="main">'+b+'</div>'+bubble()+pill()+footbar()+overlay();
+ app.classList.toggle('toolfs',st.fs&&st.screen==='tool');
+ app.classList.toggle('tone-warm',st.tone==='warm');
+ app.classList.toggle('tone-cool',st.tone==='cool');
+ document.querySelectorAll('video[data-src]').forEach(function(v){
+  var pair=VIDS[v.dataset.src]||VIDS.calm;
+  v.innerHTML='<source src="'+pair[0]+'" type="video/webm"><source src="'+pair[1]+'" type="video/mp4">'; v.load();
+  if(st.rm){ v.addEventListener('loadeddata',function(){v.pause();}); v.pause(); }
+  else { var pr=v.play(); if(pr&&pr.catch)pr.catch(function(){}); }
+ });
+ var sl=document.getElementById('sl');
+ if(sl) sl.addEventListener('input',function(){st.feel=+sl.value;st.rec=!!S[st.feel].z;render();});
+ if(TM.run&&!TM.iv&&document.getElementById('tmr'))TM.iv=setInterval(tick,1000);
+ armBubble();
+}
+app.addEventListener('click',function(e){
+ var el=e.target.closest('[data-a]'); if(!el) return;
+ /* clicking inside a sheet must never close the overlay */
+ if(el.classList.contains('ovl')&&e.target.closest('[data-stop]')) return;
+ var a=el.dataset.a,z=el.dataset.z,t=el.dataset.t,v=el.dataset.v,i=el.dataset.i;
+ if(a==='enter'||a==='home'){st.screen='home';st.zone=null;st.tool=null;st.ov=null;st.fs=false;}
+ else if(a==='back'){ if(st.screen==='tool'){st.screen='zone';st.tool=null;st.fs=false;} else {st.screen='home';st.zone=null;} st.ov=null; }
+ else if(a==='zone'){st.screen='zone';st.zone=z;st.tool=null;st.ov=null;st.fs=false;}
+ else if(a==='tool'){st.screen='tool';st.zone=z;st.tool=t;st.ov=null;st.rec=false;}
+ else if(a==='feel'){st.feel=+i;st.rec=!!S[st.feel].z;}
+ else if(a==='norec'){st.rec=false;}
+ else if(a==='fs'){st.fs=!st.fs;}
+ else if(a==='ov'){st.ov=v;}
+ else if(a==='ext'){st.ov='ext';}
+ else if(a==='close'){st.ov=null;}
+ else if(a==='dark'){st.dark=!st.dark;}
+ else if(a==='setdark'){st.dark=el.dataset.d==='dark';}
+ else if(a==='settone'){st.tone=el.dataset.t;}
+ else if(a==='setts'){st.ts=+el.dataset.s;}
+ else if(a==='rm'){st.rm=!st.rm;}
+ else if(a==='setav'){st.av=el.dataset.k;}
+ else if(a==='tlen'){TM.len=+el.dataset.s;TM.sec=TM.len;TM.run=false;clearInterval(TM.iv);TM.iv=null;}
+ else if(a==='trun'){timerRun();}
+ else if(a==='tres'){TM.sec=TM.len;TM.run=false;clearInterval(TM.iv);TM.iv=null;}
+ app.classList.toggle('dark',st.dark);
+ app.classList.toggle('norm',st.rm);
+ render();
+});
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ if(st.fs){st.fs=false;render();} else if(st.ov){st.ov=null;render();} } });
+render();
+</script>
+
+</body>
+</html>
