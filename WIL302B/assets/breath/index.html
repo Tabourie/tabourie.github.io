@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Calm Archway - Breathing Tool</title>
+
+    <!-- DESIGN SYSTEM FONTS -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Syne:wght@400;600;700&display=swap"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="style.css">
+
+</head>
+
+
+<body>
+
+
+    <!-- DECORATIVE BACKGROUND -->
+
+    <div class="background-orb orb-one"></div>
+
+    <div class="background-orb orb-two"></div>
+
+    <div class="background-orb orb-three"></div>
+
+
+
+    <!-- MAIN APPLICATION -->
+
+    <main class="breathing-app">
+
+
+        <!-- HEADER -->
+
+        <header class="app-header">
+
+            <p class="eyebrow">
+                Calm Archway
+            </p>
+
+
+            <h1>
+                Calm Breathing
+            </h1>
+
+
+            <p class="intro">
+                Take a moment to slow down and follow the rhythm.
+            </p>
+
+        </header>
+
+
+
+        <!-- SETTINGS -->
+
+        <section class="settings-panel"
+                 aria-label="Breathing settings">
+
+
+            <!-- SESSION LENGTH -->
+
+            <div class="setting-group">
+
+                <label for="sessionLength">
+                    Session length
+                </label>
+
+
+                <select id="sessionLength">
+
+                    <option value="60">
+                        1 minute
+                    </option>
+
+                    <option value="180"
+                            selected>
+                        3 minutes
+                    </option>
+
+                    <option value="300">
+                        5 minutes
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- BREATHING PATTERN -->
+
+            <div class="setting-group">
+
+                <label for="breathingPattern">
+                    Breathing pattern
+                </label>
+
+
+                <select id="breathingPattern">
+
+                    <option value="relaxed"
+                            selected>
+                        Relaxed 4-2-4-2
+                    </option>
+
+                    <option value="box">
+                        Box 4-4-4-4
+                    </option>
+
+                    <option value="slow">
+                        Slow 5-2-5-2
+                    </option>
+
+                </select>
+
+            </div>
+
+
+
+            <!-- MINIMAL MODE -->
+
+            <div class="minimal-mode-group">
+
+                <button id="minimalModeButton"
+                        class="minimal-mode-button"
+                        type="button"
+                        aria-pressed="false">
+
+                    Minimal Mode: Off
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- SETTINGS INFORMATION -->
+
+        <div class="settings-help-wrapper">
+
+            <button id="settingsHelpButton"
+                    class="help-button"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="settingsHelpPanel">
+
+                What do these settings mean?
+
+            </button>
+
+
+            <section id="settingsHelpPanel"
+                     class="settings-help-panel hidden"
+                     aria-label="Settings information">
+
+
+                <div class="help-item">
+
+                    <strong>
+                        Session length
+                    </strong>
+
+                    <p>
+                        Choose how long you would like the guided
+                        breathing session to last.
+                    </p>
+
+                </div>
+
+
+
+                <div class="help-item">
+
+                    <strong>
+                        Breathing pattern
+                    </strong>
+
+                    <p>
+                        Changes the timing of each inhale,
+                        hold and exhale phase.
+                    </p>
+
+                </div>
+
+
+
+                <div class="help-item">
+
+                    <strong>
+                        Minimal Mode
+                    </strong>
+
+                    <p>
+                        Creates a simpler breathing experience by
+                        reducing visual movement, removing background
+                        animation and hiding non-essential information
+                        such as timers.
+                    </p>
+
+                </div>
+
+
+            </section>
+
+        </div>
+
+
+
+        <!-- SESSION INFORMATION -->
+
+        <div id="sessionInfo"
+             class="session-info">
+
+
+            <span>
+
+                Session
+
+                <strong id="sessionTime">
+                    03:00
+                </strong>
+
+            </span>
+
+
+            <span>
+
+                Phase
+
+                <strong id="phaseTime">
+                    0.0s
+                </strong>
+
+            </span>
+
+
+        </div>
+
+
+
+        <!-- BREATHING VISUALISER -->
+
+        <section class="visualiser-section"
+                 aria-label="Breathing visualiser">
+
+
+            <div class="visualiser-glow">
+
+
+                <button id="breathingCircle"
+                        class="breathing-circle ready"
+                        type="button"
+                        aria-label="Start breathing session">
+
+
+                    <span class="circle-inner">
+
+
+                        <span id="phaseText"
+                              class="phase-text">
+
+                            Ready
+
+                        </span>
+
+
+                        <span id="phaseHint"
+                              class="phase-hint">
+
+                            Click here or press Start
+
+                        </span>
+
+
+                    </span>
+
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- SESSION CONTROLS -->
+
+        <div id="sessionControlsArea">
+
+
+            <p id="instructionText"
+               class="instruction"
+               aria-live="polite">
+
+                Press Start or click the circle when you're ready.
+
+            </p>
+
+
+
+            <div class="controls">
+
+
+                <button id="startButton"
+                        class="primary-button">
+
+                    Start
+
+                </button>
+
+
+                <button id="pauseButton"
+                        class="secondary-button"
+                        disabled>
+
+                    Pause
+
+                </button>
+
+
+                <button id="resetButton"
+                        class="secondary-button">
+
+                    Reset
+
+                </button>
+
+
+            </div>
+
+
+
+            <p class="exit-note">
+
+                You can pause or leave the experience at any time.
+
+            </p>
+
+
+        </div>
+
+
+
+        <!-- SESSION COMPLETE -->
+
+        <section id="completionPanel"
+                 class="completion-panel hidden"
+                 aria-live="polite">
+
+
+            <p class="completion-eyebrow">
+                Session complete
+            </p>
+
+
+            <h2>
+                A moment for yourself
+            </h2>
+
+
+            <p class="completion-message">
+
+                You have completed your breathing session.
+                Take your time before continuing.
+
+            </p>
+
+
+
+            <div class="completion-summary">
+
+
+                <div class="summary-item">
+
+                    <span class="summary-label">
+                        Duration
+                    </span>
+
+
+                    <strong id="completedDuration">
+                        3 minutes
+                    </strong>
+
+                </div>
+
+
+
+                <div class="summary-item">
+
+                    <span class="summary-label">
+                        Pattern
+                    </span>
+
+
+                    <strong id="completedPattern">
+                        Relaxed 4-2-4-2
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+
+
+            <button id="restartButton"
+                    class="primary-button restart-button">
+
+                Start Another Session
+
+            </button>
+
+
+        </section>
+
+
+    </main>
+
+
+    <script src="script.js"></script>
+
+
+</body>
+
+</html>
