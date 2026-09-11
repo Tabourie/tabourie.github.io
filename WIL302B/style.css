@@ -33,7 +33,7 @@ h2 {
 
 .item {
     padding: 20px 0;
-    border-bottom: 1px solid #ddd;
+    /* border-bottom: 1px solid #ddd; */
 }
 
 .item h3 {
@@ -41,12 +41,75 @@ h2 {
     font-size: 1.1rem;
 }
 
-a {
+a, .mLink {
     color: #d95f00;
     text-decoration: none;
     font-weight: bold;
 }
 
-a:hover {
+a:hover, .mLink:hover {
     text-decoration: underline;
+}
+
+body.modal-open {
+    overflow: hidden;
+}
+
+.video-modal[hidden] {
+    display: none;
+}
+
+.video-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.video-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 82%);
+}
+
+.video-modal__dialog {
+    position: relative;
+    z-index: 1;
+    width: min(960px, 100%);
+}
+
+.video-modal video {
+    display: block;
+    width: 100%;
+    max-height: 80vh;
+    background: #000;
+}
+
+.video-modal__close,
+.video-modal__controls button {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+    font-weight: bold;
+}
+
+.video-modal__close {
+    float: right;
+    margin-bottom: 8px;
+    color: white;
+    background: transparent;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.video-modal__controls {
+    padding-top: 10px;
+}
+
+.video-modal__controls button {
+    padding: 8px 14px;
+    color: white;
+    background: #d95f00;
 }
