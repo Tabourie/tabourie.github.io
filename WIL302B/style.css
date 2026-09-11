@@ -1,115 +1,138 @@
+:root {
+    --orange: #e86816;
+    --orange-dark: #b94707;
+    --ink: #5d656d;
+    --muted: #64707c;
+    --line: #e4e8ec;
+    --surface: #ffffff;
+    --background: #f5f7f8;
+}
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #ffffff;
-    color: #222;
+    min-height: 100vh;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--background);
+    color: var(--ink);
+    line-height: 1.5;
 }
 
 header {
-    background: #f47b20;
+    padding: clamp(2.5rem, 7vw, 5rem) clamp(1.5rem, 5vw, 4rem);
     color: white;
-    padding: 32px 40px;
+    background:
+        radial-gradient(circle at top right, rgb(255 183 86 / 35%), transparent 35%),
+        linear-gradient(135deg, #f47b20, #ce4e0a);
+}
+
+header h1 {
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: clamp(1.2rem, 2vw, 1.7rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+}
+
+header h1 + h1 {
+    margin-top: 0.25rem;
+    font-size: clamp(2rem, 5vw, 3.8rem);
+    font-weight: 750;
+    line-height: 1.08;
 }
 
 main {
-    max-width: 900px;
+    width: min(900px, calc(100% - 2.5rem));
     margin: 0 auto;
-    padding: 40px;
+    padding: 3rem 0 5rem;
 }
 
-h1,
-h2 {
-    margin-top: 0;
+section {
+    margin-top: 3rem;
 }
 
 h2 {
-    color: white;
-    background: #f47b20;
-
-    /* border-bottom: 2px solid #f47b20; */
-    padding-bottom: 8px;
-    margin-top: 40px;
+    margin: 5rem 0 1rem;
+    padding: 0;
+    color: var(--ink);
+    background: transparent;
+    font-size: 1.25rem;
+    font-weight: 750;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
 .item {
-    padding: 20px 0;
-    /* border-bottom: 1px solid #ddd; */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 0.75rem;
+    padding: 1.35rem 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--surface);
+    box-shadow: 0 2px 5px rgb(20 35 50 / 3%);
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.item:hover {
+    transform: translateY(-2px);
+    border-color: #d6dce1;
+    box-shadow: 0 10px 28px rgb(20 35 50 / 8%);
 }
 
 .item h3 {
-    margin: 0 0 8px;
-    font-size: 1.1rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
 }
 
-a, .mLink {
-    color: #d95f00;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-a:hover, .mLink:hover {
-    text-decoration: underline;
-}
-
-body.modal-open {
-    overflow: hidden;
-}
-
-.video-modal[hidden] {
-    display: none;
-}
-
-.video-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-}
-
-.video-modal__backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgb(0 0 0 / 82%);
-}
-
-.video-modal__dialog {
-    position: relative;
-    z-index: 1;
-    width: min(960px, 100%);
-}
-
-.video-modal video {
-    display: block;
-    width: 100%;
-    max-height: 80vh;
-    background: #000;
-}
-
-.video-modal__close,
-.video-modal__controls button {
-    border: 0;
-    cursor: pointer;
-    font: inherit;
-    font-weight: bold;
-}
-
-.video-modal__close {
-    float: right;
-    margin-bottom: 8px;
+a,
+.mLink {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.35rem;
     color: white;
-    background: transparent;
-    font-size: 2rem;
+    background: var(--orange);
+    border-radius: 999px;
+    padding: 0.55rem 0.9rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 160ms ease, transform 160ms ease;
+}
+
+a::after,
+.mLink::after {
+    content: "→";
+    font-size: 1rem;
     line-height: 1;
 }
 
-.video-modal__controls {
-    padding-top: 10px;
+a:hover,
+.mLink:hover {
+    background: var(--orange-dark);
+    text-decoration: none;
+    transform: translateX(2px);
 }
 
-.video-modal__controls button {
-    padding: 8px 14px;
-    color: white;
-    background: #d95f00;
+a:focus-visible,
+.mLink:focus-visible {
+    outline: 3px solid rgb(244 123 32 / 35%);
+    outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+    .item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.85rem;
+    }
 }
