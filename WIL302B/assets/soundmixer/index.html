@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundscape Mixer — Oscar Demo</title>
+    <link rel="stylesheet" href="css/soundmixerstyle.css">
+    
+</head>
+<body>
+
+<section class="soundscape-demo">
+    <div id="SmixerContainer"></div>
+</section>
+
+<script src="js/SoundMixer.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    SoundscapeMixer.mount(document.getElementById("SmixerContainer"));
+});
+</script>
+
+</body>
+</html>
