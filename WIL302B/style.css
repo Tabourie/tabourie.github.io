@@ -23,7 +23,9 @@ h2 {
 }
 
 h2 {
-    color: #f47b20;
+    color: white;
+    background: #f47b20;
+
     /* border-bottom: 2px solid #f47b20; */
     padding-bottom: 8px;
     margin-top: 40px;
